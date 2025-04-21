@@ -1,4 +1,4 @@
-# Processing neuromorphic events directly by representations in vector space
+# Event2Vec: Processing neuromorphic events directly by representations in vector space
 
 This repo contains the source codes, training logs, and models of the arxiv article **Event2Vec: Processing neuromorphic events directly by representations in vector space**.
 
