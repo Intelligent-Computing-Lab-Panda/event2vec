@@ -101,7 +101,7 @@ You have to assign `version` and `save_dir` manually, otherwise the tensorboard 
 To check the training logs, just launch the tensorboard and set the log dir like this:
 
 ```bash
-(base) PS C:\Users\fw> tensorboard.exe --logdir=C:\Users\fw\Desktop\代码\to_do_list\event2vec\logs_\lightning_logs
+(base) PS C:\Users\fw> tensorboard.exe --logdir=./logs_/lightning_logs
 TensorFlow installation not found - running with reduced feature set.
 Serving TensorBoard on localhost; to expose to the network, use a proxy or pass --bind_all
 TensorBoard 2.13.0 at http://localhost:6006/ (Press CTRL+C to quit)
