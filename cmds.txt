@@ -31,5 +31,5 @@
 15  python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-3-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
 
 
-# speed benchmark.
+# speed benchmark. It is the same with 0. The only difference is the running environment: stop all other trainings on GPUs and run the following cmd only
 16   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
