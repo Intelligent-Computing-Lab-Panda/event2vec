@@ -4,7 +4,7 @@ This repo contains the source codes, training logs, and models of the arxiv arti
 
 ## Requirements
 
-Please install `torch`, `pytorch-lightning`, `tensorboard `, and `spikingjelly`. Here is my conda environment:
+Please install `torch`, `pytorch-lightning`, `tensorboard`, and `spikingjelly`. Here is my conda environment:
 
 ```bash
 (pytorch2) [wf282@r906u39n01.grace public]$ conda list torch
