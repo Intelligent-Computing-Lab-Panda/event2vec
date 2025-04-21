@@ -111,7 +111,7 @@ Then you can see logs like this:
 
 ![logs](./docs/tb_example.png)
 
-Refer to `./cmds.txt` about the running commands of curves.
+Refer to [./cmds.txt](./cmds.txt) about the running commands of curves.
 
 ## Models
 
