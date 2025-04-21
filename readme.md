@@ -29,11 +29,11 @@ spikingjelly              0.0.0.0.15                dev_0    <develop>
 This repo uses the event data in the numpy ndarray `.npz` converted from Matlab `.m` the ASL-DVS dataset. The conversion is implemented by [SpikingJelly](https://github.com/fangwei123456/spikingjelly). Please use the following codes to generate the `event_np` directory:
 
 ```python
-    from spikingjelly.datasets.asl_dvs import ASLDVS
+from spikingjelly.datasets.asl_dvs import ASLDVS
 
-    root_dir = '/home/wf282/project/datasets/ASLDVS'
-    train_set = ASLDVS(root_dir, data_type='event')
-    print(train_set[0][0])
+root_dir = '/home/wf282/project/datasets/ASLDVS'
+train_set = ASLDVS(root_dir, data_type='event')
+print(train_set[0][0])
 ```
 
 You will get outputs like:
