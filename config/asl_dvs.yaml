@@ -1,0 +1,26 @@
+seed_everything: 0
+
+trainer:
+  max_epochs: 64
+  default_root_dir: ./asl_dvs
+  precision: 16-mixed # bf16-mixed for >= A100
+
+
+model:
+  P: 2
+  H: 180
+  W: 240
+  d_model: 256
+  d_feedforward: 512
+  n_head: 16
+  n_layers: 2
+  n_classes: 24
+  t_heads: 1
+
+data:
+  name: asl_dvs
+  # root: /dev/shm/ASLDVS/events_np
+  root: /home/wf282/project/datasets/ASLDVS/events_np
+  sample_number: 255
+  batch_size: 128
+  num_workers: 4

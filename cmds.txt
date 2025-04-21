@@ -1,0 +1,35 @@
+0   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+1   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed naive --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+2   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed naive2d --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+3   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 72 --model.w 96 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed naive --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+4   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 18 --model.w 24 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed naive --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+5   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 180 --model.w 240 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed naive --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+6   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 90 --model.w 120 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed naive --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+7   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 9 --model.w 12 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed naive --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+8   python train_script.py --config ./config/asl_dvs.yaml --model.tpe t2v --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+9   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true --model.n_layers 1
+
+10  python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 9 --model.w 12 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+11  python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+12  python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 72 --model.w 96 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+13  python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 180 --model.w 240 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+14  python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-1-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+15  python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-3-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
+
+
+# speed benchmark.
+16   python train_script.py --config ./config/asl_dvs.yaml --model.tpe add --model.h 36 --model.w 48 --data.norm_t dataset-wise --data.sampler random_sample --trainer.devices='[0]' --model.compile true --model.embed neighbor1d-naive2d-2-1 --model.label_smoothing 0. --model.dropout 0. --model.offset_t true
