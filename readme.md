@@ -1,6 +1,6 @@
 # Event2Vec: Processing neuromorphic events directly by representations in vector space
 
-This repo contains the source codes, training logs, and models of the arxiv article [Event2Vec: Processing neuromorphic events directly by representations in vector space](https://www.researchgate.net/publication/390984971_Event2Vec_Processing_neuromorphic_events_directly_by_representations_in_vector_space).
+This repo contains the source codes, training logs, and models of the arxiv article [Event2Vec: Processing neuromorphic events directly by representations in vector space](https://arxiv.org/abs/2504.15371).
 
 ## Requirements
 
@@ -130,7 +130,15 @@ Many contents of this project have not been released to our article and this rep
 Do not forget to cite our article and SpikingJelly if you use them in your research:
 
 ```
-todo
+@misc{fang2025event2vecprocessingneuromorphicevents,
+      title={Event2Vec: Processing neuromorphic events directly by representations in vector space}, 
+      author={Wei Fang and Priyadarshini Panda},
+      year={2025},
+      eprint={2504.15371},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2504.15371}, 
+}
 ```
 
 
