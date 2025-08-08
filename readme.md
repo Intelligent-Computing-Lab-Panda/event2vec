@@ -1,10 +1,10 @@
-# Event2Vec: Processing neuromorphic events directly by representations in vector space
+# Processing neuromorphic events directly by representations in vector space
 
-This repo contains the source codes, training logs, and models of the arxiv article [Event2Vec: Processing neuromorphic events directly by representations in vector space](https://arxiv.org/abs/2504.15371).
+This repo contains the source codes, training logs, and models of the arxiv article **Event2Vec: Processing neuromorphic events directly by representations in vector space**.
 
 ## Requirements
 
-Please install `torch`, `pytorch-lightning`, `tensorboard`, and `spikingjelly`. Here is my conda environment:
+Please install `torch`, `pytorch-lightning`, `tensorboard `, and `spikingjelly`. Here is my conda environment:
 
 ```bash
 (pytorch2) [wf282@r906u39n01.grace public]$ conda list torch
@@ -29,11 +29,11 @@ spikingjelly              0.0.0.0.15                dev_0    <develop>
 This repo uses the event data in the numpy ndarray `.npz` converted from Matlab `.m` the ASL-DVS dataset. The conversion is implemented by [SpikingJelly](https://github.com/fangwei123456/spikingjelly). Please use the following codes to generate the `event_np` directory:
 
 ```python
-from spikingjelly.datasets.asl_dvs import ASLDVS
+    from spikingjelly.datasets.asl_dvs import ASLDVS
 
-root_dir = '/home/wf282/project/datasets/ASLDVS'
-train_set = ASLDVS(root_dir, data_type='event')
-print(train_set[0][0])
+    root_dir = '/home/wf282/project/datasets/ASLDVS'
+    train_set = ASLDVS(root_dir, data_type='event')
+    print(train_set[0][0])
 ```
 
 You will get outputs like:
@@ -101,7 +101,7 @@ You have to assign `version` and `save_dir` manually, otherwise the tensorboard 
 To check the training logs, just launch the tensorboard and set the log dir like this:
 
 ```bash
-(base) PS C:\Users\fw> tensorboard.exe --logdir=./logs_/lightning_logs
+(base) PS C:\Users\fw> tensorboard.exe --logdir=C:\Users\fw\Desktop\代码\to_do_list\event2vec\logs_\lightning_logs
 TensorFlow installation not found - running with reduced feature set.
 Serving TensorBoard on localhost; to expose to the network, use a proxy or pass --bind_all
 TensorBoard 2.13.0 at http://localhost:6006/ (Press CTRL+C to quit)
@@ -111,7 +111,7 @@ Then you can see logs like this:
 
 ![logs](./docs/tb_example.png)
 
-Refer to [./cmds.txt](./cmds.txt) about the running commands of curves.
+Refer to `./cmds.txt` about the running commands of curves.
 
 ## Models
 
@@ -130,15 +130,7 @@ Many contents of this project have not been released to our article and this rep
 Do not forget to cite our article and SpikingJelly if you use them in your research:
 
 ```
-@misc{fang2025event2vecprocessingneuromorphicevents,
-      title={Event2Vec: Processing neuromorphic events directly by representations in vector space}, 
-      author={Wei Fang and Priyadarshini Panda},
-      year={2025},
-      eprint={2504.15371},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2504.15371}, 
-}
+todo
 ```
 
 

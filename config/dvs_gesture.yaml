@@ -1,0 +1,39 @@
+seed_everything: 0
+
+trainer:
+  default_root_dir: ./dvs_gesture
+  precision: 32 # bf16-mixed for >= A100
+  # precision: 32
+  max_epochs: 128
+
+model:
+  warmup_epochs: 8
+  P: 2
+  H: 128
+  W: 128
+  h: 128
+  w: 128
+  train_transform_args: RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomTranslate-16,16
+  train_transform_policy: RandomApply-0.5
+  test_transform_args: ''
+  backbone: DVSGestureNet-2,128,128-0,128,256,4,relu
+  n_classes: 11
+  compile: false
+  lr: 5e-4
+  min_lr: 1e-6
+  optimizer: adamw
+  wd: 0.05
+  label_smoothing: 0
+  batch_size: 64
+
+data:
+  name: dvs_gesture
+  # rsync -ah --info=progress2 /vast/palmer/pi/panda/wf282/datasets/DVS128Gesture/events_np /dev/shm/DVS128Gesture
+  # root: /vast/palmer/pi/panda/wf282/datasets/DVS128Gesture/events_np
+  root: /dev/shm/DVS128Gesture/events_np
+  # sample_number: 430000
+  sample_number: 4096
+  num_workers: 8
+  norm_t: none
+  sampler: random_sample
+  batch_size: 64
