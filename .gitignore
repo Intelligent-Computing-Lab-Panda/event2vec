@@ -160,6 +160,5 @@ cython_debug/
 #.idea/
 
 *.pt
-logs
 .idea/
 w1.py

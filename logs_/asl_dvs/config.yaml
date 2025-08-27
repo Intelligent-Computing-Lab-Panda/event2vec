@@ -1,0 +1,85 @@
+# lightning.pytorch==2.5.1.post0
+seed_everything: 0
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices:
+  - 0
+  - 1
+  - 2
+  - 3
+  num_nodes: 1
+  precision: 32
+  logger: null
+  callbacks: null
+  fast_dev_run: false
+  max_epochs: 128
+  min_epochs: null
+  max_steps: -1
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  overfit_batches: 0.0
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: null
+  log_every_n_steps: null
+  enable_checkpointing: null
+  enable_progress_bar: null
+  enable_model_summary: null
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+  profiler: null
+  detect_anomaly: false
+  barebones: false
+  plugins: null
+  sync_batchnorm: false
+  reload_dataloaders_every_n_epochs: 0
+  default_root_dir: ./asl_dvs
+  model_registry: null
+model:
+  P: 2
+  H: 180
+  W: 240
+  h: 180
+  w: 240
+  train_transform_args: ''
+  train_transform_policy: ''
+  test_transform_args: ''
+  backbone: ASLDVSNet-2,180,240-64,128,2,relu
+  n_classes: 24
+  compile: false
+  lr: 0.001
+  min_lr: 1.0e-06
+  batch_size: 512
+  warmup_epochs: 0
+  optimizer: adamw
+  lrs: CosineAnnealingLR
+  wd: 0.0
+  label_smoothing: 0.0
+  load: null
+data:
+  name: asl_dvs
+  root: /dev/shm/ASLDVS/events_np
+  sample_number: 512
+  sampler: random_sample
+  norm_t: none
+  batch_size: 512
+  num_workers: 8
+  train_full_sample: false
+  val_root: null
+  val_sample_number: null
+  val_sampler: null
+  val_repeats: 8
+test_only: false
+resume: null
+optimizer: null
+lr_scheduler: null
