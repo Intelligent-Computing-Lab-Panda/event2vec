@@ -1,0 +1,1739 @@
+python train_script.py --config ./config/dvs_lip.yaml --trainer.devices='[4,5,6,7]' --model.backbone manual_mlp-2,128,128
+,2048-0,192,384,6,relu,0 --model.lr 1e-3 --data.root /dev/shm/dvs_lip --data.sample_number 1024 --trainer.max_epochs 64 --model.
+warmup_epochs 4 --model.wd 0.05 --data.train_repeats 3 --data.sampler k_mean_sample-128,128-1 --trainer.gradient_clip_val=1.0 --
+trainer.gradient_clip_algorithm=norm --data.val_repeats 1 --model.load ./dvslip/checkpoints/version_58/last.ckpt --model.train_t
+ransform_args RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTr
+anslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-4,128 --model.label_smoothing 0.1 --trainer.precision bf16-mixed -
+-trainer.logger.class_path=TensorBoardLogger --trainer.logger.init_args.version=101 --trainer.logger.init_args.save_dir=./dvslip
+Seed set to 0
+TokenMix initialized with alpha=1.0, num_classes=100
+missing state dict keys:
+ _IncompatibleKeys(missing_keys=['classifier.heads.weight', 'classifier.heads.bias'], unexpected_keys=['classifier.mask_token',
+'classifier.heads.0.weight', 'classifier.heads.1.weight', 'classifier.heads.1.bias', 'classifier.heads.3.weight', 'classifier.he
+ads.4.weight', 'classifier.heads.4.bias', 'classifier.heads.6.weight'])
+params in MB 18.307632446289062
+Using bfloat16 Automatic Mixed Precision (AMP)
+💡 Tip: For seamless cloud uploads and versioning, try installing [litmodels](https://pypi.org/project/litmodels/) to enable Lit
+ModelCheckpoint, which syncs automatically with the Lightning model registry.
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+numactl --membind=0 --cpunodebind=0 --
+Event2VecClassifier(
+  (transforms): Sequential(
+    (0): ToFloat()
+    (1): TransformWrapper(
+      (train_transforms): RandomApply(
+        (0): RandomResize(scale_y=(0.800000, 1.200000), scale_x=(0.800000, 1.200000))
+        (1): RandomRotation(center=(63.500, 63.500), degrees=(-15.000, 15.000))
+        (2): RandomShear(sy=0.050, sx=0.050)
+        (3): RandomHorizontalFlip(W=128, prob=0.500)
+        (4): RandomTranslate(dy=16, dx=16)
+        (5): RandomErasing(H=128, W=128, prob=0.100000, h=16, w=16)
+        (6): RandomChunkDrop(n_chunk=4, max_mask_len=128)
+      )
+      (test_transforms): Identity()
+    )
+    (2): ToEventDomain(H=128, W=128)
+  )
+  (classifier): ManualMLPNet(
+    (embed_net): MLPEmbedding(
+      (embed): Sequential(
+        (0): Linear(in_features=3, out_features=48, bias=False)
+        (1): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+        (2): ReLU(inplace=True)
+        (3): Linear(in_features=48, out_features=96, bias=False)
+        (4): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+        (5): ReLU(inplace=True)
+        (6): Linear(in_features=96, out_features=192, bias=False)
+        (7): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (tpe): Conv(
+      (conv): Sequential(
+        (0): Conv1d(1, 48, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+        (1): Transpose()
+        (2): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+        (3): Transpose()
+        (4): ReLU(inplace=True)
+        (5): Conv1d(48, 96, kernel_size=(3,), stride=(1,), padding=(1,), groups=48, bias=False)
+        (6): Transpose()
+        (7): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+        (8): Transpose()
+        (9): ReLU(inplace=True)
+        (10): Conv1d(96, 192, kernel_size=(3,), stride=(1,), padding=(1,), groups=96, bias=False)
+        (11): Transpose()
+        (12): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (backbone_net): GLAEncoder(
+      (layers): ModuleList(
+        (0-15): 16 x GLAEncoderLayer(
+          (attention): GatedLinearAttention(
+            (attention): BiForgettingAttention(
+              (q_proj): Linear(in_features=192, out_features=192, bias=False)
+              (k_proj): Linear(in_features=192, out_features=96, bias=False)
+              (v_proj): Linear(in_features=192, out_features=96, bias=False)
+              (f_proj): Linear(in_features=192, out_features=6, bias=True)
+              (o_proj): Linear(in_features=384, out_features=192, bias=False)
+              (q_norm): GroupNorm(6, 192, is_rms_norm=True, eps=1e-05)
+              (k_norm): GroupNorm(3, 96, is_rms_norm=True, eps=1e-05)
+            )
+          )
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (ffn): FFN(
+            (linear1): Linear(in_features=192, out_features=384, bias=False)
+            (linear2): Linear(in_features=384, out_features=192, bias=False)
+            (activation): ReLU()
+            (dropout): Dropout(p=0.0, inplace=False)
+          )
+        )
+      )
+      (norm): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+      (drop_path): ModuleList(
+        (0): DropPath(drop_prob=0.000)
+        (1): DropPath(drop_prob=0.027)
+        (2): DropPath(drop_prob=0.053)
+        (3): DropPath(drop_prob=0.080)
+        (4): DropPath(drop_prob=0.107)
+        (5): DropPath(drop_prob=0.133)
+        (6): DropPath(drop_prob=0.160)
+        (7): DropPath(drop_prob=0.187)
+        (8): DropPath(drop_prob=0.213)
+        (9): DropPath(drop_prob=0.240)
+        (10): DropPath(drop_prob=0.267)
+        (11): DropPath(drop_prob=0.293)
+        (12): DropPath(drop_prob=0.320)
+        (13): DropPath(drop_prob=0.347)
+        (14): DropPath(drop_prob=0.373)
+        (15): DropPath(drop_prob=0.400)
+      )
+    )
+    (heads_dropout): Dropout(p=0.0, inplace=False)
+    (heads): Linear(in_features=192, out_features=100, bias=True)
+    (mixer): TokenMix()
+  )
+  (train_acc): MulticlassAccuracy()
+  (valid_acc): MulticlassAccuracy()
+  (train_loss): MeanMetric()
+  (valid_loss): MeanMetric()
+)
+Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/4
+[rank: 1] Seed set to 0
+[rank: 2] Seed set to 0
+[rank: 3] Seed set to 0
+TokenMix initialized with alpha=1.0, num_classes=100
+TokenMix initialized with alpha=1.0, num_classes=100
+TokenMix initialized with alpha=1.0, num_classes=100
+missing state dict keys:
+ _IncompatibleKeys(missing_keys=['classifier.heads.weight', 'classifier.heads.bias'], unexpected_keys=['classifier.mask_token',
+'classifier.heads.0.weight', 'classifier.heads.1.weight', 'classifier.heads.1.bias', 'classifier.heads.3.weight', 'classifier.he
+ads.4.weight', 'classifier.heads.4.bias', 'classifier.heads.6.weight'])
+params in MB 18.307632446289062
+missing state dict keys:
+ _IncompatibleKeys(missing_keys=['classifier.heads.weight', 'classifier.heads.bias'], unexpected_keys=['classifier.mask_token',
+'classifier.heads.0.weight', 'classifier.heads.1.weight', 'classifier.heads.1.bias', 'classifier.heads.3.weight', 'classifier.he
+ads.4.weight', 'classifier.heads.4.bias', 'classifier.heads.6.weight'])
+params in MB 18.307632446289062
+missing state dict keys:
+ _IncompatibleKeys(missing_keys=['classifier.heads.weight', 'classifier.heads.bias'], unexpected_keys=['classifier.mask_token',
+'classifier.heads.0.weight', 'classifier.heads.1.weight', 'classifier.heads.1.bias', 'classifier.heads.3.weight', 'classifier.he
+ads.4.weight', 'classifier.heads.4.bias', 'classifier.heads.6.weight'])
+params in MB 18.307632446289062
+numactl --membind=0 --cpunodebind=0 --
+numactl --membind=0 --cpunodebind=0 --
+numactl --membind=0 --cpunodebind=0 --
+Initializing distributed: GLOBAL_RANK: 1, MEMBER: 2/4
+Initializing distributed: GLOBAL_RANK: 2, MEMBER: 3/4
+Initializing distributed: GLOBAL_RANK: 3, MEMBER: 4/4
+----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 4 processes
+----------------------------------------------------------------------------------------------------
+
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 3 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 2 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:54: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:54: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:54: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:54: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:55: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  FP16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:55: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  FP16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:55: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  FP16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:58: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BF16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:58: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BF16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:58: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BF16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:55: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  FP16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:61: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:61: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:61: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:58: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BF16_COMPRESS = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:64: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:64: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:64: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:61: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:67: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:67: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:67: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:74: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:64: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:74: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:74: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:80: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:67: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:80: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:80: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:85: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:74: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:85: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:85: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:90: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  NOOP = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:90: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  NOOP = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:90: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  NOOP = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:80: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:85: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hoo
+ks/__init__.py:90: FutureWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.membe
+r() if you want to preserve the old behavior
+  NOOP = partial(
+valid_loss=4.583787, valid_acc=0.016077, valid_acc_std= 0.000000, valid_speed=2986.351731 samples/sec
+escape time = 2025-08-30 14:34:29
+
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logg
+er_connector/result.py:434: It is recommended to use `self.log('valid_acc', ..., sync_dist=True)` when logging on epoch level in
+ distributed setting to accumulate the metric across devices.
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logg
+er_connector/result.py:434: It is recommended to use `self.log('valid_loss', ..., sync_dist=True)` when logging on epoch level i
+n distributed setting to accumulate the metric across devices.
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=0, train_loss=4.638137, train_acc=0.011404, train_speed=792.981336 samples/sec
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logg
+er_connector/result.py:434: It is recommended to use `self.log('train_acc', ..., sync_dist=True)` when logging on epoch level in
+ distributed setting to accumulate the metric across devices.
+/remote-home/share/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logg
+er_connector/result.py:434: It is recommended to use `self.log('train_loss', ..., sync_dist=True)` when logging on epoch level i
+n distributed setting to accumulate the metric across devices.
+valid_loss=3.635505, valid_acc=0.132838, valid_acc_std= 0.000000, valid_speed=3033.272148 samples/sec
+escape time = 2025-08-30 15:34:09
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=1, train_loss=4.331083, train_acc=0.052487, train_speed=1015.813130 samples/sec
+valid_loss=2.747227, valid_acc=0.382436, valid_acc_std= 0.000000, valid_speed=3025.493660 samples/sec
+escape time = 2025-08-30 15:21:12
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=2, train_loss=3.739481, train_acc=0.160358, train_speed=1009.943048 samples/sec
+valid_loss=2.375571, valid_acc=0.455587, valid_acc_std= 0.000000, valid_speed=2964.349262 samples/sec
+escape time = 2025-08-30 15:21:29
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=3, train_loss=3.365482, train_acc=0.255657, train_speed=1013.802351 samples/sec
+valid_loss=2.256109, valid_acc=0.480506, valid_acc_std= 0.000000, valid_speed=2984.453979 samples/sec
+escape time = 2025-08-30 15:21:17
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=4, train_loss=3.254914, train_acc=0.291465, train_speed=1009.460275 samples/sec
+valid_loss=2.134840, valid_acc=0.526326, valid_acc_std= 0.000000, valid_speed=2957.899593 samples/sec
+escape time = 2025-08-30 15:21:29
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=5, train_loss=2.928017, train_acc=0.365212, train_speed=1011.032345 samples/sec
+valid_loss=1.949504, valid_acc=0.585611, valid_acc_std= 0.000000, valid_speed=3026.886364 samples/sec
+escape time = 2025-08-30 15:21:21
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=6, train_loss=2.915035, train_acc=0.384317, train_speed=1023.683147 samples/sec
+valid_loss=1.961817, valid_acc=0.566921, valid_acc_std= 0.000000, valid_speed=3101.627820 samples/sec
+escape time = 2025-08-30 15:20:45
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=7, train_loss=2.799553, train_acc=0.421224, train_speed=1035.967123 samples/sec
+valid_loss=1.819633, valid_acc=0.623191, valid_acc_std= 0.000000, valid_speed=2940.723217 samples/sec
+escape time = 2025-08-30 15:20:20
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=8, train_loss=2.791183, train_acc=0.431865, train_speed=1018.539600 samples/sec
+valid_loss=1.814949, valid_acc=0.617162, valid_acc_std= 0.000000, valid_speed=3098.287343 samples/sec
+escape time = 2025-08-30 15:20:55
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=9, train_loss=2.676362, train_acc=0.461072, train_speed=1030.488457 samples/sec
+valid_loss=1.772450, valid_acc=0.643891, valid_acc_std= 0.000000, valid_speed=3046.404559 samples/sec
+escape time = 2025-08-30 15:20:28
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=10, train_loss=2.551670, train_acc=0.494881, train_speed=1032.573253 samples/sec
+valid_loss=1.711880, valid_acc=0.665394, valid_acc_std= 0.000000, valid_speed=3016.668426 samples/sec
+escape time = 2025-08-30 15:20:23
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=11, train_loss=2.568214, train_acc=0.499057, train_speed=1027.589406 samples/sec
+valid_loss=1.710928, valid_acc=0.650723, valid_acc_std= 0.000000, valid_speed=3028.811230 samples/sec
+escape time = 2025-08-30 15:20:33
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=12, train_loss=2.546876, train_acc=0.521395, train_speed=1029.706673 samples/sec
+valid_loss=1.722099, valid_acc=0.658963, valid_acc_std= 0.000000, valid_speed=2988.377265 samples/sec
+escape time = 2025-08-30 15:20:28
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=13, train_loss=2.426623, train_acc=0.541397, train_speed=1026.001345 samples/sec
+valid_loss=1.841979, valid_acc=0.621182, valid_acc_std= 0.000000, valid_speed=3121.492833 samples/sec
+escape time = 2025-08-30 15:20:32
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=14, train_loss=2.396059, train_acc=0.559424, train_speed=1023.028127 samples/sec
+valid_loss=1.745435, valid_acc=0.652130, valid_acc_std= 0.000000, valid_speed=2976.891272 samples/sec
+escape time = 2025-08-30 15:20:40
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=15, train_loss=2.297846, train_acc=0.583446, train_speed=1031.184428 samples/sec
+valid_loss=1.783218, valid_acc=0.647910, valid_acc_std= 0.000000, valid_speed=3027.017627 samples/sec
+escape time = 2025-08-30 15:20:21
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=16, train_loss=2.368529, train_acc=0.565284, train_speed=1038.260633 samples/sec
+valid_loss=1.684407, valid_acc=0.671825, valid_acc_std= 0.000000, valid_speed=3099.084628 samples/sec
+escape time = 2025-08-30 15:20:04
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=17, train_loss=2.294459, train_acc=0.600777, train_speed=1023.970508 samples/sec
+valid_loss=1.649990, valid_acc=0.681471, valid_acc_std= 0.000000, valid_speed=3025.657699 samples/sec
+escape time = 2025-08-30 15:20:33
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=18, train_loss=2.472997, train_acc=0.567529, train_speed=1030.413942 samples/sec
+valid_loss=1.690893, valid_acc=0.669815, valid_acc_std= 0.000000, valid_speed=3063.800431 samples/sec
+escape time = 2025-08-30 15:20:18
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=19, train_loss=2.321914, train_acc=0.599564, train_speed=1027.932485 samples/sec
+valid_loss=1.647523, valid_acc=0.690113, valid_acc_std= 0.000000, valid_speed=3093.262819 samples/sec
+escape time = 2025-08-30 15:20:21
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=20, train_loss=2.353818, train_acc=0.598846, train_speed=1030.307892 samples/sec
+valid_loss=1.640777, valid_acc=0.689912, valid_acc_std= 0.000000, valid_speed=3045.483043 samples/sec
+escape time = 2025-08-30 15:20:17
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=21, train_loss=2.198169, train_acc=0.623563, train_speed=1034.556819 samples/sec
+valid_loss=1.638402, valid_acc=0.696744, valid_acc_std= 0.000000, valid_speed=3026.146413 samples/sec
+escape time = 2025-08-30 15:20:09
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=22, train_loss=2.253080, train_acc=0.623675, train_speed=1026.643142 samples/sec
+valid_loss=1.684215, valid_acc=0.681471, valid_acc_std= 0.000000, valid_speed=3097.633903 samples/sec
+escape time = 2025-08-30 15:20:20
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=23, train_loss=2.079137, train_acc=0.668620, train_speed=1024.935750 samples/sec
+valid_loss=1.670793, valid_acc=0.683682, valid_acc_std= 0.000000, valid_speed=3046.405893 samples/sec
+escape time = 2025-08-30 15:20:23
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=24, train_loss=2.171193, train_acc=0.656811, train_speed=1027.990289 samples/sec
+valid_loss=1.634502, valid_acc=0.696141, valid_acc_std= 0.000000, valid_speed=3062.061747 samples/sec
+escape time = 2025-08-30 15:20:17
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=25, train_loss=2.188974, train_acc=0.653421, train_speed=1028.900025 samples/sec
+valid_loss=1.581282, valid_acc=0.713023, valid_acc_std= 0.000000, valid_speed=2979.542746 samples/sec
+escape time = 2025-08-30 15:20:16
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=26, train_loss=2.097211, train_acc=0.685951, train_speed=1027.520367 samples/sec
+valid_loss=1.625855, valid_acc=0.693730, valid_acc_std= 0.000000, valid_speed=2978.381534 samples/sec
+escape time = 2025-08-30 15:20:17
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=27, train_loss=2.199543, train_acc=0.658338, train_speed=1030.832071 samples/sec
+valid_loss=1.602690, valid_acc=0.716037, valid_acc_std= 0.000000, valid_speed=3084.350601 samples/sec
+escape time = 2025-08-30 15:20:09
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=28, train_loss=2.062509, train_acc=0.703552, train_speed=1028.239643 samples/sec
+valid_loss=1.686242, valid_acc=0.699960, valid_acc_std= 0.000000, valid_speed=3024.114067 samples/sec
+escape time = 2025-08-30 15:20:13
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=29, train_loss=1.997502, train_acc=0.715630, train_speed=1027.407257 samples/sec
+valid_loss=1.661767, valid_acc=0.702572, valid_acc_std= 0.000000, valid_speed=2950.713056 samples/sec
+escape time = 2025-08-30 15:20:14
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=30, train_loss=2.123092, train_acc=0.701082, train_speed=1022.018121 samples/sec
+valid_loss=1.581001, valid_acc=0.722267, valid_acc_std= 0.000000, valid_speed=3083.587758 samples/sec
+escape time = 2025-08-30 15:20:19
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=31, train_loss=1.841906, train_acc=0.749933, train_speed=1027.833510 samples/sec
+valid_loss=1.558850, valid_acc=0.731109, valid_acc_std= 0.000000, valid_speed=3029.679582 samples/sec
+escape time = 2025-08-30 15:20:11
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=32, train_loss=2.018101, train_acc=0.718436, train_speed=1023.720095 samples/sec
+valid_loss=1.632488, valid_acc=0.715836, valid_acc_std= 0.000000, valid_speed=2771.543210 samples/sec
+escape time = 2025-08-30 15:20:20
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=33, train_loss=1.942913, train_acc=0.750337, train_speed=1028.046900 samples/sec
+valid_loss=1.668597, valid_acc=0.716841, valid_acc_std= 0.000000, valid_speed=3030.426983 samples/sec
+escape time = 2025-08-30 15:20:08
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=34, train_loss=1.996911, train_acc=0.746139, train_speed=1025.940271 samples/sec
+valid_loss=1.640448, valid_acc=0.731913, valid_acc_std= 0.000000, valid_speed=3083.692091 samples/sec
+escape time = 2025-08-30 15:20:09
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=35, train_loss=2.115280, train_acc=0.705348, train_speed=1030.824950 samples/sec
+valid_loss=1.652672, valid_acc=0.713023, valid_acc_std= 0.000000, valid_speed=3147.667301 samples/sec
+escape time = 2025-08-30 15:20:01
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=36, train_loss=1.882928, train_acc=0.765086, train_speed=1033.006598 samples/sec
+valid_loss=1.642728, valid_acc=0.724879, valid_acc_std= 0.000000, valid_speed=3089.279885 samples/sec
+escape time = 2025-08-30 15:19:58
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=37, train_loss=1.877911, train_acc=0.773662, train_speed=1033.669185 samples/sec
+valid_loss=1.633394, valid_acc=0.729502, valid_acc_std= 0.000000, valid_speed=2995.340650 samples/sec
+escape time = 2025-08-30 15:19:57
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=38, train_loss=1.827606, train_acc=0.789085, train_speed=1033.670328 samples/sec
+valid_loss=1.597351, valid_acc=0.730908, valid_acc_std= 0.000000, valid_speed=3114.950957 samples/sec
+escape time = 2025-08-30 15:19:54
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=39, train_loss=1.767349, train_acc=0.790993, train_speed=1039.037841 samples/sec
+valid_loss=1.678934, valid_acc=0.721865, valid_acc_std= 0.000000, valid_speed=3028.165236 samples/sec
+escape time = 2025-08-30 15:19:49
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=40, train_loss=1.733568, train_acc=0.808033, train_speed=1038.168838 samples/sec
+valid_loss=1.663954, valid_acc=0.736535, valid_acc_std= 0.000000, valid_speed=2985.121163 samples/sec
+escape time = 2025-08-30 15:19:50
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=41, train_loss=1.865232, train_acc=0.803453, train_speed=1025.612319 samples/sec
+valid_loss=1.660939, valid_acc=0.731109, valid_acc_std= 0.000000, valid_speed=3021.193330 samples/sec
+escape time = 2025-08-30 15:20:00
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=42, train_loss=1.776363, train_acc=0.822917, train_speed=1037.655874 samples/sec
+valid_loss=1.636442, valid_acc=0.734526, valid_acc_std= 0.000000, valid_speed=2962.467167 samples/sec
+escape time = 2025-08-30 15:19:49
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=43, train_loss=1.675143, train_acc=0.838631, train_speed=1032.188906 samples/sec
+valid_loss=1.701231, valid_acc=0.724678, valid_acc_std= 0.000000, valid_speed=2977.847366 samples/sec
+escape time = 2025-08-30 15:19:52
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=44, train_loss=1.985305, train_acc=0.761651, train_speed=1031.740008 samples/sec
+valid_loss=1.674232, valid_acc=0.733320, valid_acc_std= 0.000000, valid_speed=3120.567795 samples/sec
+escape time = 2025-08-30 15:19:50
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=45, train_loss=1.763824, train_acc=0.816990, train_speed=1036.927115 samples/sec
+valid_loss=1.658177, valid_acc=0.737138, valid_acc_std= 0.000000, valid_speed=3123.778840 samples/sec
+escape time = 2025-08-30 15:19:45
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=46, train_loss=1.853950, train_acc=0.807090, train_speed=1037.135863 samples/sec
+valid_loss=1.637881, valid_acc=0.741560, valid_acc_std= 0.000000, valid_speed=3017.720493 samples/sec
+escape time = 2025-08-30 15:19:44
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=47, train_loss=1.749572, train_acc=0.814565, train_speed=1039.357420 samples/sec
+valid_loss=1.688490, valid_acc=0.737540, valid_acc_std= 0.000000, valid_speed=3074.809490 samples/sec
+escape time = 2025-08-30 15:19:42
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=48, train_loss=1.733019, train_acc=0.826127, train_speed=1023.463694 samples/sec
+valid_loss=1.663833, valid_acc=0.739550, valid_acc_std= 0.000000, valid_speed=3089.181117 samples/sec
+escape time = 2025-08-30 15:19:52
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=49, train_loss=1.676305, train_acc=0.838474, train_speed=1016.798363 samples/sec
+valid_loss=1.667308, valid_acc=0.743569, valid_acc_std= 0.000000, valid_speed=2883.531086 samples/sec
+escape time = 2025-08-30 15:19:56
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=50, train_loss=1.693117, train_acc=0.834680, train_speed=1027.086435 samples/sec
+valid_loss=1.652942, valid_acc=0.742363, valid_acc_std= 0.000000, valid_speed=3043.091395 samples/sec
+escape time = 2025-08-30 15:19:48
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=51, train_loss=1.603016, train_acc=0.848442, train_speed=1018.465471 samples/sec
+valid_loss=1.686132, valid_acc=0.740555, valid_acc_std= 0.000000, valid_speed=3075.497295 samples/sec
+escape time = 2025-08-30 15:19:52
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=52, train_loss=1.640798, train_acc=0.847791, train_speed=1020.150515 samples/sec
+valid_loss=1.667771, valid_acc=0.744172, valid_acc_std= 0.000000, valid_speed=3110.978322 samples/sec
+escape time = 2025-08-30 15:19:50
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=53, train_loss=1.624029, train_acc=0.859038, train_speed=1015.393282 samples/sec
+valid_loss=1.662543, valid_acc=0.745579, valid_acc_std= 0.000000, valid_speed=3124.646370 samples/sec
+escape time = 2025-08-30 15:19:50
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=54, train_loss=1.720087, train_acc=0.851877, train_speed=1026.781472 samples/sec
+valid_loss=1.661260, valid_acc=0.746584, valid_acc_std= 0.000000, valid_speed=3047.536657 samples/sec
+escape time = 2025-08-30 15:19:45
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=55, train_loss=1.629399, train_acc=0.859375, train_speed=1027.619384 samples/sec
+valid_loss=1.680484, valid_acc=0.744574, valid_acc_std= 0.000000, valid_speed=3056.147591 samples/sec
+escape time = 2025-08-30 15:19:44
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=56, train_loss=1.587673, train_acc=0.881488, train_speed=1011.489083 samples/sec
+valid_loss=1.668768, valid_acc=0.749196, valid_acc_std= 0.000000, valid_speed=3090.013522 samples/sec
+escape time = 2025-08-30 15:19:48
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=57, train_loss=1.554926, train_acc=0.871924, train_speed=1017.129346 samples/sec
+valid_loss=1.681427, valid_acc=0.748794, valid_acc_std= 0.000000, valid_speed=3090.323273 samples/sec
+escape time = 2025-08-30 15:19:46
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=58, train_loss=1.684188, train_acc=0.862787, train_speed=1011.350523 samples/sec
+valid_loss=1.678740, valid_acc=0.751608, valid_acc_std= 0.000000, valid_speed=3032.007460 samples/sec
+escape time = 2025-08-30 15:19:46
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=59, train_loss=1.620066, train_acc=0.872441, train_speed=1021.472261 samples/sec
+valid_loss=1.676169, valid_acc=0.751407, valid_acc_std= 0.000000, valid_speed=3046.114219 samples/sec
+escape time = 2025-08-30 15:19:42
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=60, train_loss=1.648049, train_acc=0.868220, train_speed=1031.520965 samples/sec
+valid_loss=1.672796, valid_acc=0.750402, valid_acc_std= 0.000000, valid_speed=2990.626227 samples/sec
+escape time = 2025-08-30 15:19:40
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=61, train_loss=1.669396, train_acc=0.868018, train_speed=1012.327685 samples/sec
+valid_loss=1.674144, valid_acc=0.752010, valid_acc_std= 0.000000, valid_speed=3061.259149 samples/sec
+escape time = 2025-08-30 15:19:41
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=62, train_loss=1.540887, train_acc=0.887302, train_speed=1033.130434 samples/sec
+valid_loss=1.673863, valid_acc=0.751407, valid_acc_std= 0.000000, valid_speed=3048.493257 samples/sec
+escape time = 2025-08-30 15:19:38
+
+Namespace(config=[Path_fsr(./config/dvs_lip.yaml, cwd=/remote-home/share/xxx/user/xxxxxxx/event2vec)], seed_everything
+=0, trainer=Namespace(accelerator='auto', strategy='auto', devices=[4, 5, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Nam
+espace(class_path='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvslip', name='lightning_logs',
+ version=101, log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush
+_secs=120, filename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=Non
+e, max_time=None, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit
+_batches=0.0, val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_chec
+kpointing=None, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_
+clip_algorithm='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, det
+ect_anomaly=False, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='.
+/dvslip', model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,
+1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1
+-16,16/RandomChunkDrop-4,128', train_transform_policy='RandomApply-0.5', test_transform_args='', backbone='manual_mlp-2,128,128,
+2048-0,192,384,6,relu,0', n_classes=100, compile=False, lr=0.001, min_lr=1e-06, batch_size=64, warmup_epochs=4, optimizer='adamw
+', lrs='CosineAnnealingLR', wd=0.05, label_smoothing=0.1, load='./dvslip/checkpoints/version_58/last.ckpt'), data=Namespace(name
+='dvs_lip', root='/dev/shm/dvs_lip', sample_number=1024, sampler='k_mean_sample-128,128-1', norm_t='none', batch_size=64, num_wo
+rkers=8, train_repeats=3, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=1), test_only=False, resume=None,
+ optimizer=None, lr_scheduler=None)
+epoch=63, train_loss=1.794768, train_acc=0.838901, train_speed=1030.656872 samples/sec
+`Trainer.fit` stopped: `max_epochs=64` reached.

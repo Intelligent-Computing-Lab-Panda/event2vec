@@ -1,0 +1,1767 @@
+python train_script.py --config ./config/as
+l_dvs.yaml --trainer.devices='[0,2,3,4,1,6,7]' --model.backbone manual_mlp-2,128,128,2048-0,64,128,2,relu,0 --model.lr 1e-3 --da
+ta.root /dev/shm/ASLDVS/events_np --data.sample_number 1024 --trainer.max_epochs 64 --model.warmup_epochs 4 --model.wd 0 --data.
+train_full_sample false --data.train_repeats 1 --data.sampler random_sample --data.val_repeats 10 --model.label_smoothing 0 --tr
+ainer.precision bf16-mixed --trainer.logger.class_path=TensorBoardLogger --trainer.logger.init_args.version=5 --trainer.logger.i
+nit_args.save_dir=./asl_dvs --model.batch_size 64 --data.batch_size 64
+Seed set to 0
+params in MB 0.2730560302734375
+Using bfloat16 Automatic Mixed Precision (AMP)
+💡 Tip: For seamless cloud uploads and versioning, try installing [litmodels](https://pypi.org/project/litmodels/) to enable Lit
+ModelCheckpoint, which syncs automatically with the Lightning model registry.
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+numactl --membind=0 --cpunodebind=0 --
+Event2VecClassifier(
+  (transforms): Sequential(
+    (0): ToFloat()
+    (1): TransformWrapper(
+      (train_transforms): Identity()
+      (test_transforms): Identity()
+    )
+    (2): ToEventDomain(H=180, W=240)
+  )
+  (classifier): ManualMLPNet(
+    (embed_net): MLPEmbedding(
+      (embed): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=False)
+        (1): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+        (2): ReLU(inplace=True)
+        (3): Linear(in_features=16, out_features=32, bias=False)
+        (4): LayerNorm((32,), eps=1e-05, elementwise_affine=True)
+        (5): ReLU(inplace=True)
+        (6): Linear(in_features=32, out_features=64, bias=False)
+        (7): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (tpe): Conv(
+      (conv): Sequential(
+        (0): Conv1d(1, 16, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+        (1): Transpose()
+        (2): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+        (3): Transpose()
+        (4): ReLU(inplace=True)
+        (5): Conv1d(16, 32, kernel_size=(3,), stride=(1,), padding=(1,), groups=16, bias=False)
+        (6): Transpose()
+        (7): LayerNorm((32,), eps=1e-05, elementwise_affine=True)
+        (8): Transpose()
+        (9): ReLU(inplace=True)
+        (10): Conv1d(32, 64, kernel_size=(3,), stride=(1,), padding=(1,), groups=32, bias=False)
+        (11): Transpose()
+        (12): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (backbone_net): GLAEncoder(
+      (layers): ModuleList(
+        (0-1): 2 x GLAEncoderLayer(
+          (attention): GatedLinearAttention(
+            (attention): BiForgettingAttention(
+              (q_proj): Linear(in_features=64, out_features=64, bias=False)
+              (k_proj): Linear(in_features=64, out_features=32, bias=False)
+              (v_proj): Linear(in_features=64, out_features=32, bias=False)
+              (f_proj): Linear(in_features=64, out_features=2, bias=True)
+              (o_proj): Linear(in_features=128, out_features=64, bias=False)
+              (q_norm): GroupNorm(2, 64, is_rms_norm=True, eps=1e-05)
+              (k_norm): GroupNorm(1, 32, is_rms_norm=True, eps=1e-05)
+            )
+          )
+          (norm1): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+          (ffn): FFN(
+            (linear1): Linear(in_features=64, out_features=128, bias=False)
+            (linear2): Linear(in_features=128, out_features=64, bias=False)
+            (activation): ReLU()
+            (dropout): Dropout(p=0.0, inplace=False)
+          )
+        )
+      )
+      (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+      (drop_path): ModuleList(
+        (0-1): 2 x Identity()
+      )
+    )
+    (heads_dropout): Dropout(p=0.0, inplace=False)
+    (heads): Linear(in_features=64, out_features=24, bias=True)
+  )
+  (train_acc): MulticlassAccuracy()
+  (valid_acc): MulticlassAccuracy()
+  (train_loss): MeanMetric()
+  (valid_loss): MeanMetric()
+)
+Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/7
+[rank: 6] Seed set to 0
+params in MB 0.2730560302734375
+[rank: 5] Seed set to 0
+numactl --membind=1 --cpunodebind=1 --
+Initializing distributed: GLOBAL_RANK: 6, MEMBER: 7/7
+params in MB 0.2730560302734375
+numactl --membind=1 --cpunodebind=1 --
+Initializing distributed: GLOBAL_RANK: 5, MEMBER: 6/7
+[rank: 2] Seed set to 0
+[rank: 3] Seed set to 0
+params in MB 0.2730560302734375
+numactl --membind=0 --cpunodebind=0 --
+params in MB 0.2730560302734375
+Initializing distributed: GLOBAL_RANK: 3, MEMBER: 4/7
+numactl --membind=0 --cpunodebind=0 --
+Initializing distributed: GLOBAL_RANK: 2, MEMBER: 3/7
+[rank: 4] Seed set to 0
+params in MB 0.2730560302734375
+numactl --membind=1 --cpunodebind=1 --
+Initializing distributed: GLOBAL_RANK: 4, MEMBER: 5/7
+[rank: 1] Seed set to 0
+params in MB 0.2730560302734375
+numactl --membind=0 --cpunodebind=0 --
+Initializing distributed: GLOBAL_RANK: 1, MEMBER: 2/7
+----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 7 processes
+----------------------------------------------------------------------------------------------------
+
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 4 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 2 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 5 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 6 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 3 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+valid_loss=3.163826, valid_acc=0.058671, valid_acc_std= 0.108206, valid_speed=6943.979022 samples/sec
+escape time = 2025-08-30 07:55:01
+
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('valid_acc', ..., sync_dist=True)` when logging on epoch level in distributed setting to
+ accumulate the metric across devices.
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('valid_acc_std', ..., sync_dist=True)` when logging on epoch level in distributed settin
+g to accumulate the metric across devices.
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('valid_loss', ..., sync_dist=True)` when logging on epoch level in distributed setting t
+o accumulate the metric across devices.
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=0, train_loss=3.211576, train_acc=0.053571, train_speed=1619.758362 samples/sec
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('train_acc', ..., sync_dist=True)` when logging on epoch level in distributed setting to
+ accumulate the metric across devices.
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('train_loss', ..., sync_dist=True)` when logging on epoch level in distributed setting t
+o accumulate the metric across devices.
+valid_loss=1.961384, valid_acc=0.405159, valid_acc_std= 0.146926, valid_speed=6591.165670 samples/sec
+escape time = 2025-08-30 08:49:17
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=1, train_loss=2.533560, train_acc=0.253348, train_speed=1612.134929 samples/sec
+valid_loss=1.153884, valid_acc=0.639400, valid_acc_std= 0.095865, valid_speed=6395.243329 samples/sec
+escape time = 2025-08-30 08:50:00
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=2, train_loss=1.535589, train_acc=0.525124, train_speed=1586.838651 samples/sec
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+valid_loss=0.711879, valid_acc=0.774722, valid_acc_std= 0.069389, valid_speed=6596.369859 samples/sec
+escape time = 2025-08-30 08:49:20
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=3, train_loss=0.933641, train_acc=0.705717, train_speed=1570.454939 samples/sec
+valid_loss=0.467859, valid_acc=0.850972, valid_acc_std= 0.038756, valid_speed=6608.382778 samples/sec
+escape time = 2025-08-30 08:49:17
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=4, train_loss=0.559703, train_acc=0.824454, train_speed=1625.112422 samples/sec
+valid_loss=0.294761, valid_acc=0.907877, valid_acc_std= 0.030784, valid_speed=6607.457456 samples/sec
+escape time = 2025-08-30 08:47:03
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=5, train_loss=0.375533, train_acc=0.883507, train_speed=1618.257376 samples/sec
+valid_loss=0.251902, valid_acc=0.921052, valid_acc_std= 0.020887, valid_speed=6604.416445 samples/sec
+escape time = 2025-08-30 08:46:46
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=6, train_loss=0.288817, train_acc=0.909301, train_speed=1622.199699 samples/sec
+valid_loss=0.232855, valid_acc=0.925055, valid_acc_std= 0.016966, valid_speed=6608.231561 samples/sec
+escape time = 2025-08-30 08:46:07
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=7, train_loss=0.212106, train_acc=0.935578, train_speed=1626.236509 samples/sec
+valid_loss=0.181723, valid_acc=0.942862, valid_acc_std= 0.016610, valid_speed=6604.201345 samples/sec
+escape time = 2025-08-30 08:45:31
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=8, train_loss=0.188563, train_acc=0.941307, train_speed=1621.139388 samples/sec
+valid_loss=0.148864, valid_acc=0.953428, valid_acc_std= 0.019947, valid_speed=6590.945781 samples/sec
+escape time = 2025-08-30 08:45:12
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=9, train_loss=0.162295, train_acc=0.949194, train_speed=1622.633717 samples/sec
+valid_loss=0.118865, valid_acc=0.962892, valid_acc_std= 0.020425, valid_speed=6602.253704 samples/sec
+escape time = 2025-08-30 08:44:36
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=10, train_loss=0.140898, train_acc=0.956176, train_speed=1625.311387 samples/sec
+valid_loss=0.111628, valid_acc=0.965521, valid_acc_std= 0.013230, valid_speed=6600.131325 samples/sec
+escape time = 2025-08-30 08:44:04
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=11, train_loss=0.124156, train_acc=0.960739, train_speed=1556.978891 samples/sec
+valid_loss=0.111404, valid_acc=0.965739, valid_acc_std= 0.016063, valid_speed=6601.953332 samples/sec
+escape time = 2025-08-30 08:45:27
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=12, train_loss=0.115010, train_acc=0.963753, train_speed=1620.754437 samples/sec
+valid_loss=0.097682, valid_acc=0.968373, valid_acc_std= 0.018024, valid_speed=6608.722216 samples/sec
+escape time = 2025-08-30 08:43:08
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=13, train_loss=0.104355, train_acc=0.967547, train_speed=1623.140879 samples/sec
+valid_loss=0.090769, valid_acc=0.971443, valid_acc_std= 0.012335, valid_speed=6582.751778 samples/sec
+escape time = 2025-08-30 08:42:40
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=14, train_loss=0.101122, train_acc=0.967522, train_speed=1618.644396 samples/sec
+valid_loss=0.100569, valid_acc=0.968304, valid_acc_std= 0.013984, valid_speed=6595.784413 samples/sec
+escape time = 2025-08-30 08:42:14
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=15, train_loss=0.084988, train_acc=0.972991, train_speed=1614.536251 samples/sec
+valid_loss=0.095093, valid_acc=0.969782, valid_acc_std= 0.011447, valid_speed=6615.106897 samples/sec
+escape time = 2025-08-30 08:41:45
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=16, train_loss=0.083639, train_acc=0.973351, train_speed=1622.856111 samples/sec
+valid_loss=0.064835, valid_acc=0.979871, valid_acc_std= 0.005320, valid_speed=6593.929660 samples/sec
+escape time = 2025-08-30 08:41:07
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=17, train_loss=0.074527, train_acc=0.976228, train_speed=1620.335404 samples/sec
+valid_loss=0.076034, valid_acc=0.976404, valid_acc_std= 0.008526, valid_speed=6290.048508 samples/sec
+escape time = 2025-08-30 08:41:49
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=18, train_loss=0.069480, train_acc=0.978199, train_speed=1573.744299 samples/sec
+valid_loss=0.067845, valid_acc=0.978497, valid_acc_std= 0.010276, valid_speed=6597.708471 samples/sec
+escape time = 2025-08-30 08:41:17
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=19, train_loss=0.070026, train_acc=0.977418, train_speed=1590.465559 samples/sec
+valid_loss=0.059187, valid_acc=0.981652, valid_acc_std= 0.006569, valid_speed=6582.613057 samples/sec
+escape time = 2025-08-30 08:40:25
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=20, train_loss=0.066541, train_acc=0.978348, train_speed=1614.717956 samples/sec
+valid_loss=0.060111, valid_acc=0.980937, valid_acc_std= 0.007847, valid_speed=6607.395240 samples/sec
+escape time = 2025-08-30 08:39:16
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=21, train_loss=0.055614, train_acc=0.982565, train_speed=1624.568070 samples/sec
+valid_loss=0.058976, valid_acc=0.981220, valid_acc_std= 0.011520, valid_speed=6602.937129 samples/sec
+escape time = 2025-08-30 08:38:33
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=22, train_loss=0.057321, train_acc=0.981696, train_speed=1624.125413 samples/sec
+valid_loss=0.085226, valid_acc=0.971682, valid_acc_std= 0.010936, valid_speed=6582.611161 samples/sec
+escape time = 2025-08-30 08:38:07
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=23, train_loss=0.054731, train_acc=0.982341, train_speed=1613.309721 samples/sec
+valid_loss=0.049326, valid_acc=0.984618, valid_acc_std= 0.011717, valid_speed=6609.379704 samples/sec
+escape time = 2025-08-30 08:37:45
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=24, train_loss=0.048900, train_acc=0.984313, train_speed=1627.464151 samples/sec
+valid_loss=0.037875, valid_acc=0.988026, valid_acc_std= 0.005225, valid_speed=6597.307160 samples/sec
+escape time = 2025-08-30 08:37:00
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=25, train_loss=0.044050, train_acc=0.986210, train_speed=1615.101503 samples/sec
+valid_loss=0.034321, valid_acc=0.989320, valid_acc_std= 0.004127, valid_speed=6306.710591 samples/sec
+escape time = 2025-08-30 08:37:40
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=26, train_loss=0.039564, train_acc=0.987240, train_speed=1552.645258 samples/sec
+valid_loss=0.047084, valid_acc=0.984826, valid_acc_std= 0.008008, valid_speed=6605.626837 samples/sec
+escape time = 2025-08-30 08:37:28
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=27, train_loss=0.040490, train_acc=0.986359, train_speed=1618.877119 samples/sec
+valid_loss=0.052648, valid_acc=0.982946, valid_acc_std= 0.005587, valid_speed=6610.951118 samples/sec
+escape time = 2025-08-30 08:35:38
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=28, train_loss=0.043027, train_acc=0.985851, train_speed=1620.897702 samples/sec
+valid_loss=0.056943, valid_acc=0.981379, valid_acc_std= 0.013458, valid_speed=6602.475018 samples/sec
+escape time = 2025-08-30 08:35:07
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=29, train_loss=0.033888, train_acc=0.988864, train_speed=1614.439057 samples/sec
+valid_loss=0.043555, valid_acc=0.985273, valid_acc_std= 0.011585, valid_speed=6595.471048 samples/sec
+escape time = 2025-08-30 08:34:44
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=30, train_loss=0.035724, train_acc=0.988517, train_speed=1623.494352 samples/sec
+valid_loss=0.025708, valid_acc=0.991885, valid_acc_std= 0.003602, valid_speed=6603.736426 samples/sec
+escape time = 2025-08-30 08:34:03
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=31, train_loss=0.030027, train_acc=0.990724, train_speed=1620.361556 samples/sec
+valid_loss=0.033749, valid_acc=0.989395, valid_acc_std= 0.005783, valid_speed=6609.825680 samples/sec
+escape time = 2025-08-30 08:33:35
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=32, train_loss=0.030807, train_acc=0.990117, train_speed=1630.913721 samples/sec
+valid_loss=0.027110, valid_acc=0.991399, valid_acc_std= 0.004053, valid_speed=6018.695568 samples/sec
+escape time = 2025-08-30 08:34:30
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=33, train_loss=0.024643, train_acc=0.992150, train_speed=1528.590982 samples/sec
+valid_loss=0.039640, valid_acc=0.987307, valid_acc_std= 0.009885, valid_speed=6598.878451 samples/sec
+escape time = 2025-08-30 08:34:08
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=34, train_loss=0.025341, train_acc=0.991344, train_speed=1620.870158 samples/sec
+valid_loss=0.042567, valid_acc=0.986225, valid_acc_std= 0.008262, valid_speed=6598.534823 samples/sec
+escape time = 2025-08-30 08:32:07
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=35, train_loss=0.023079, train_acc=0.992597, train_speed=1620.531205 samples/sec
+valid_loss=0.025868, valid_acc=0.992093, valid_acc_std= 0.003653, valid_speed=6597.228612 samples/sec
+escape time = 2025-08-30 08:31:37
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=36, train_loss=0.022848, train_acc=0.992721, train_speed=1616.048994 samples/sec
+valid_loss=0.017743, valid_acc=0.994454, valid_acc_std= 0.001819, valid_speed=6607.475579 samples/sec
+escape time = 2025-08-30 08:31:09
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=37, train_loss=0.019942, train_acc=0.993601, train_speed=1619.038443 samples/sec
+valid_loss=0.023364, valid_acc=0.992867, valid_acc_std= 0.003501, valid_speed=6596.889119 samples/sec
+escape time = 2025-08-30 08:30:38
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=38, train_loss=0.018394, train_acc=0.994159, train_speed=1621.963180 samples/sec
+valid_loss=0.021243, valid_acc=0.993343, valid_acc_std= 0.002803, valid_speed=6586.807774 samples/sec
+escape time = 2025-08-30 08:30:06
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=39, train_loss=0.017838, train_acc=0.994234, train_speed=1613.853022 samples/sec
+valid_loss=0.017672, valid_acc=0.994906, valid_acc_std= 0.003221, valid_speed=6606.095687 samples/sec
+escape time = 2025-08-30 08:29:39
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=40, train_loss=0.016313, train_acc=0.994990, train_speed=1621.544852 samples/sec
+valid_loss=0.020234, valid_acc=0.993700, valid_acc_std= 0.003999, valid_speed=5993.380186 samples/sec
+escape time = 2025-08-30 08:30:18
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=41, train_loss=0.013966, train_acc=0.995660, train_speed=1525.904509 samples/sec
+valid_loss=0.015051, valid_acc=0.995565, valid_acc_std= 0.002739, valid_speed=6599.909807 samples/sec
+escape time = 2025-08-30 08:29:45
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=42, train_loss=0.011399, train_acc=0.996379, train_speed=1618.144234 samples/sec
+valid_loss=0.018080, valid_acc=0.994484, valid_acc_std= 0.003455, valid_speed=6596.202880 samples/sec
+escape time = 2025-08-30 08:28:09
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=43, train_loss=0.011497, train_acc=0.996615, train_speed=1623.971487 samples/sec
+valid_loss=0.013528, valid_acc=0.996136, valid_acc_std= 0.001938, valid_speed=6600.354661 samples/sec
+escape time = 2025-08-30 08:27:34
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=44, train_loss=0.011173, train_acc=0.996714, train_speed=1612.947224 samples/sec
+valid_loss=0.011807, valid_acc=0.996711, valid_acc_std= 0.001719, valid_speed=6596.799156 samples/sec
+escape time = 2025-08-30 08:27:11
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=45, train_loss=0.008990, train_acc=0.997433, train_speed=1620.530025 samples/sec
+valid_loss=0.014009, valid_acc=0.995833, valid_acc_std= 0.002570, valid_speed=6616.807217 samples/sec
+escape time = 2025-08-30 08:26:34
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=46, train_loss=0.008418, train_acc=0.997495, train_speed=1616.723296 samples/sec
+valid_loss=0.010925, valid_acc=0.996900, valid_acc_std= 0.001527, valid_speed=6604.673088 samples/sec
+escape time = 2025-08-30 08:26:07
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=47, train_loss=0.008422, train_acc=0.997470, train_speed=1611.205437 samples/sec
+valid_loss=0.009825, valid_acc=0.997292, valid_acc_std= 0.001830, valid_speed=6244.637850 samples/sec
+escape time = 2025-08-30 08:26:09
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=48, train_loss=0.006737, train_acc=0.998177, train_speed=1564.353536 samples/sec
+valid_loss=0.010580, valid_acc=0.997168, valid_acc_std= 0.001555, valid_speed=6606.089906 samples/sec
+escape time = 2025-08-30 08:25:33
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=49, train_loss=0.005846, train_acc=0.998450, train_speed=1600.161820 samples/sec
+valid_loss=0.008857, valid_acc=0.997624, valid_acc_std= 0.001340, valid_speed=6593.524438 samples/sec
+escape time = 2025-08-30 08:24:46
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=50, train_loss=0.005288, train_acc=0.998599, train_speed=1608.736413 samples/sec
+valid_loss=0.008884, valid_acc=0.997788, valid_acc_std= 0.001769, valid_speed=6597.295167 samples/sec
+escape time = 2025-08-30 08:24:11
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=51, train_loss=0.004790, train_acc=0.998686, train_speed=1620.235360 samples/sec
+valid_loss=0.009217, valid_acc=0.997540, valid_acc_std= 0.002028, valid_speed=6608.074928 samples/sec
+escape time = 2025-08-30 08:23:35
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=52, train_loss=0.004762, train_acc=0.998760, train_speed=1624.100707 samples/sec
+valid_loss=0.008018, valid_acc=0.997946, valid_acc_std= 0.001301, valid_speed=6602.893354 samples/sec
+escape time = 2025-08-30 08:23:04
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=53, train_loss=0.004406, train_acc=0.998822, train_speed=1622.064068 samples/sec
+valid_loss=0.007865, valid_acc=0.997946, valid_acc_std= 0.000993, valid_speed=6582.518564 samples/sec
+escape time = 2025-08-30 08:22:35
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=54, train_loss=0.003861, train_acc=0.999070, train_speed=1612.330167 samples/sec
+valid_loss=0.007512, valid_acc=0.998011, valid_acc_std= 0.001332, valid_speed=6591.046784 samples/sec
+escape time = 2025-08-30 08:22:07
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=55, train_loss=0.003807, train_acc=0.999020, train_speed=1613.141689 samples/sec
+valid_loss=0.007202, valid_acc=0.998145, valid_acc_std= 0.001447, valid_speed=6596.688919 samples/sec
+escape time = 2025-08-30 08:21:38
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=56, train_loss=0.003239, train_acc=0.999256, train_speed=1558.198758 samples/sec
+valid_loss=0.006682, valid_acc=0.998234, valid_acc_std= 0.001320, valid_speed=6592.967770 samples/sec
+escape time = 2025-08-30 08:21:20
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=57, train_loss=0.003245, train_acc=0.999343, train_speed=1619.436002 samples/sec
+valid_loss=0.006876, valid_acc=0.998318, valid_acc_std= 0.001301, valid_speed=6613.699400 samples/sec
+escape time = 2025-08-30 08:20:35
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=58, train_loss=0.002956, train_acc=0.999281, train_speed=1626.444023 samples/sec
+valid_loss=0.006605, valid_acc=0.998388, valid_acc_std= 0.001307, valid_speed=6601.735454 samples/sec
+escape time = 2025-08-30 08:20:03
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=59, train_loss=0.002831, train_acc=0.999591, train_speed=1623.791154 samples/sec
+valid_loss=0.006390, valid_acc=0.998388, valid_acc_std= 0.001010, valid_speed=6607.009270 samples/sec
+escape time = 2025-08-30 08:19:33
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=60, train_loss=0.002958, train_acc=0.999306, train_speed=1624.907746 samples/sec
+valid_loss=0.007134, valid_acc=0.998165, valid_acc_std= 0.002019, valid_speed=6612.156668 samples/sec
+escape time = 2025-08-30 08:19:02
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=61, train_loss=0.003087, train_acc=0.999268, train_speed=1624.061902 samples/sec
+valid_loss=0.006435, valid_acc=0.998318, valid_acc_std= 0.001389, valid_speed=6614.472846 samples/sec
+escape time = 2025-08-30 08:18:32
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=62, train_loss=0.002986, train_acc=0.999368, train_speed=1629.578633 samples/sec
+valid_loss=0.006359, valid_acc=0.998408, valid_acc_std= 0.001035, valid_speed=6613.916257 samples/sec
+escape time = 2025-08-30 08:18:01
+
+Namespace(config=[Path_fsr(./config/asl_dvs.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespace(a
+ccelerator='auto', strategy='auto', devices=[0, 2, 3, 4, 1, 6, 7], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_p
+ath='lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./asl_dvs', name='lightning_logs', version=5, l
+og_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, file
+name_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=Non
+e, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0, v
+al_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None,
+ enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=None, gradient_clip_algorithm
+=None, deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fals
+e, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./asl_dvs', model
+_registry=None), model=Namespace(P=2, H=180, W=240, h=180, w=240, train_transform_args='', train_transform_policy='', test_trans
+form_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0', n_classes=24, compile=False, lr=0.001, min_lr=1e-06, batch
+_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, label_smoothing=0.0, load=None), data=Namespace(n
+ame='asl_dvs', root='/dev/shm/ASLDVS/events_np', sample_number=1024, sampler='random_sample', norm_t='none', batch_size=64, num_
+workers=8, train_full_sample=False, train_repeats=1, val_root=None, val_sample_number=None, val_sampler=None, val_repeats=10), t
+est_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=63, train_loss=0.002884, train_acc=0.999454, train_speed=1620.945049 samples/sec
+`Trainer.fit` stopped: `max_epochs=64` reached.

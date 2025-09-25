@@ -10,7 +10,7 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
-      save_dir: ./dvs_gesture
+      save_dir: ./dvslip
       name: lightning_logs
       log_graph: false
       default_hp_metric: true
@@ -53,7 +53,7 @@ trainer:
   plugins: null
   sync_batchnorm: false
   reload_dataloaders_every_n_epochs: 0
-  default_root_dir: ./dvs_gesture
+  default_root_dir: ./dvslip
   model_registry: null
 model:
   P: 2
@@ -61,39 +61,39 @@ model:
   W: 128
   h: 128
   w: 128
-  train_transform_args: RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256
-  train_transform_policy: RandomApply-0.6
+  train_transform_args: RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-4,128
+  train_transform_policy: RandomApply-0.5
   test_transform_args: ''
-  d_model: 64
-  d_feedforward: 128
-  nheads: 2
-  n_layers: 4
+  d_model: 192
+  d_feedforward: 384
+  nheads: 6
+  n_layers: 16
   activation: 'relu'
   mask_ratio: 0.
-  p_token_mix: 0.
-  p_intensity_drop: 0. 
-  drop_path: 0.
-  n_classes: 11
+  p_token_mix: 0.5
+  p_intensity_drop: 0.1
+  drop_path: 0.4
+  n_classes: 100
   compile: false
   lr: 0.001
-  min_lr: 0.0
+  min_lr: 1.0e-06
   batch_size: 64
   warmup_epochs: 4
   optimizer: adamw
   lrs: CosineAnnealingLR
-  wd: 0.0
-  label_smoothing: 0.0
-  load: null
-  pool_every_layer: 1
+  wd: 0.05
+  label_smoothing: 0.1
+  load: ./checkpoints/dvs_lip_cluster_event_self_supervised_training.ckpt
+  pool_every_layer: 0
 data:
-  name: dvs_gesture
-  root: /dev/shm/DVS128Gesture/events_np
-  sample_number: 4096
+  name: dvs_lip
+  root: /dev/shm/dvs_lip
+  sample_number: 1024
   sampler: random_sample
   batch_size: 64
   num_workers: 8
-  train_repeats: 24
+  train_repeats: 3
   val_root: null
   val_sample_number: null
   val_sampler: null
-  val_repeats: 10
+  val_repeats: 1

@@ -1,0 +1,1683 @@
+python train_script.py --config ./config/dv
+s_gesture.yaml --trainer.devices='[0,1,2,3]' --model.backbone manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0 --model.lr 1e-3 --
+data.root /dev/shm/DVS128Gesture/events_np --data.sample_number 4096 --trainer.max_epochs 64 --model.warmup_epochs 4 --model.wd
+0 --data.train_repeats 24 --data.sampler random_sample --trainer.gradient_clip_val=1.0 --trainer.gradient_clip_algorithm=norm --
+data.val_repeats 10 --model.train_transform_args RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-10/RandomShear-0.02,0.02/Ra
+ndomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256 --model.train_transform_policy RandomApply-0.6 --model
+.label_smoothing 0 --trainer.precision bf16-mixed --trainer.logger.class_path=TensorBoardLogger --trainer.logger.init_args.versi
+on=257 --trainer.logger.init_args.save_dir=./dvs_gesture --model.min_lr 0
+Seed set to 0
+params in MB 0.5249748229980469
+Using bfloat16 Automatic Mixed Precision (AMP)
+💡 Tip: For seamless cloud uploads and versioning, try installing [litmodels](https://pypi.org/project/litmodels/) to enable Lit
+ModelCheckpoint, which syncs automatically with the Lightning model registry.
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+numactl --membind=0 --cpunodebind=0 --
+Event2VecClassifier(
+  (transforms): Sequential(
+    (0): ToFloat()
+    (1): TransformWrapper(
+      (train_transforms): RandomApply(
+        (0): RandomResize(scale_y=(0.800000, 1.200000), scale_x=(0.800000, 1.200000))
+        (1): RandomRotation(center=(63.500, 63.500), degrees=(-10.000, 10.000))
+        (2): RandomShear(sy=0.020, sx=0.020)
+        (3): RandomTranslate(dy=16, dx=16)
+        (4): RandomErasing(H=128, W=128, prob=0.100000, h=16, w=16)
+        (5): RandomChunkDrop(n_chunk=8, max_mask_len=256)
+      )
+      (test_transforms): Identity()
+    )
+    (2): ToEventDomain(H=128, W=128)
+  )
+  (classifier): ManualMLPNet(
+    (embed_net): MLPEmbedding(
+      (embed): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=False)
+        (1): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+        (2): ReLU(inplace=True)
+        (3): Linear(in_features=16, out_features=32, bias=False)
+        (4): LayerNorm((32,), eps=1e-05, elementwise_affine=True)
+        (5): ReLU(inplace=True)
+        (6): Linear(in_features=32, out_features=64, bias=False)
+        (7): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (tpe): Conv(
+      (conv): Sequential(
+        (0): Conv1d(1, 16, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+        (1): Transpose()
+        (2): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+        (3): Transpose()
+        (4): ReLU(inplace=True)
+        (5): Conv1d(16, 32, kernel_size=(3,), stride=(1,), padding=(1,), groups=16, bias=False)
+        (6): Transpose()
+        (7): LayerNorm((32,), eps=1e-05, elementwise_affine=True)
+        (8): Transpose()
+        (9): ReLU(inplace=True)
+        (10): Conv1d(32, 64, kernel_size=(3,), stride=(1,), padding=(1,), groups=32, bias=False)
+        (11): Transpose()
+        (12): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (backbone_net): ModuleList(
+      (0-3): 4 x GLAEncoder(
+        (layers): ModuleList(
+          (0): GLAEncoderLayer(
+            (attention): GatedLinearAttention(
+              (attention): BiForgettingAttention(
+                (q_proj): Linear(in_features=64, out_features=64, bias=False)
+                (k_proj): Linear(in_features=64, out_features=32, bias=False)
+                (v_proj): Linear(in_features=64, out_features=32, bias=False)
+                (f_proj): Linear(in_features=64, out_features=2, bias=True)
+                (o_proj): Linear(in_features=128, out_features=64, bias=False)
+                (q_norm): GroupNorm(2, 64, is_rms_norm=True, eps=1e-05)
+                (k_norm): GroupNorm(1, 32, is_rms_norm=True, eps=1e-05)
+              )
+            )
+            (norm1): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+            (norm2): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+            (ffn): FFN(
+              (linear1): Linear(in_features=64, out_features=128, bias=False)
+              (linear2): Linear(in_features=128, out_features=64, bias=False)
+              (activation): ReLU()
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+        (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+        (drop_path): ModuleList(
+          (0): Identity()
+        )
+      )
+    )
+    (heads_dropout): Dropout(p=0.0, inplace=False)
+    (heads): Linear(in_features=64, out_features=11, bias=True)
+    (mixer): RandomCutmix()
+  )
+  (train_acc): MulticlassAccuracy()
+  (valid_acc): MulticlassAccuracy()
+  (test_acc): MulticlassAccuracy()
+  (train_loss): MeanMetric()
+  (valid_loss): MeanMetric()
+  (test_loss): MeanMetric()
+)
+Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/4
+[rank: 1] Seed set to 0
+params in MB 0.5249748229980469
+numactl --membind=0 --cpunodebind=0 --
+Initializing distributed: GLOBAL_RANK: 1, MEMBER: 2/4
+[rank: 3] Seed set to 0
+params in MB 0.5249748229980469
+numactl --membind=0 --cpunodebind=0 --
+Initializing distributed: GLOBAL_RANK: 3, MEMBER: 4/4
+[rank: 2] Seed set to 0
+params in MB 0.5249748229980469
+numactl --membind=0 --cpunodebind=0 --
+Initializing distributed: GLOBAL_RANK: 2, MEMBER: 3/4
+----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 4 processes
+----------------------------------------------------------------------------------------------------
+
+LOCAL_RANK: 2 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 3 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:54: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  ALLREDUCE = partial(_ddp_comm_hook_wrapper, comm_hook=default.allreduce_hook)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:55: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  FP16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:58: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BF16_COMPRESS = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:61: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_TENSOR = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:64: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  QUANTIZE_PER_CHANNEL = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:67: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:74: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:80: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:85: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  BATCHED_POWER_SGD_RANK2 = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/algorithms/ddp_comm_hooks/__init__.py:90: Futu
+reWarning: functools.partial will be a method descriptor in future Python versions; wrap it in enum.member() if you want to pres
+erve the old behavior
+  NOOP = partial(
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No devi
+ce id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+  warnings.warn(  # warn only once
+valid_loss=2.315170, valid_acc=0.167708, valid_acc_std= 0.000000, valid_speed=550.113188 samples/sec
+escape time = 2025-09-21 07:48:49
+
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('valid_acc', ..., sync_dist=True)` when logging on epoch level in distributed setting to
+ accumulate the metric across devices.
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('valid_acc_std', ..., sync_dist=True)` when logging on epoch level in distributed settin
+g to accumulate the metric across devices.
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('valid_loss', ..., sync_dist=True)` when logging on epoch level in distributed setting t
+o accumulate the metric across devices.
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=0, train_loss=2.435287, train_acc=0.096413, train_speed=588.506215 samples/sec
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('train_acc', ..., sync_dist=True)` when logging on epoch level in distributed setting to
+ accumulate the metric across devices.
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/lightning/pytorch/trainer/connectors/logger_connector/result.py:
+434: It is recommended to use `self.log('train_loss', ..., sync_dist=True)` when logging on epoch level in distributed setting t
+o accumulate the metric across devices.
+valid_loss=1.332872, valid_acc=0.542014, valid_acc_std= 0.017384, valid_speed=494.115837 samples/sec
+escape time = 2025-09-21 08:40:25
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=1, train_loss=1.697116, train_acc=0.380682, train_speed=575.616052 samples/sec
+valid_loss=0.876169, valid_acc=0.685764, valid_acc_std= 0.013176, valid_speed=482.230701 samples/sec
+escape time = 2025-09-21 08:41:34
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=2, train_loss=1.376826, train_acc=0.516335, train_speed=596.597096 samples/sec
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/xxx/user/xxxxxxx/env/pytorch/lib/python3.13/site-packages/torch/optim/lr_scheduler.py:198: UserWarning: The epoch paramete
+r in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the sche
+duler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where
+ available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/cho
+ose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+valid_loss=0.617839, valid_acc=0.786806, valid_acc_std= 0.031022, valid_speed=439.043000 samples/sec
+escape time = 2025-09-21 08:40:18
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=3, train_loss=0.955318, train_acc=0.674254, train_speed=584.877900 samples/sec
+valid_loss=0.577194, valid_acc=0.797222, valid_acc_std= 0.011712, valid_speed=432.353862 samples/sec
+escape time = 2025-09-21 08:41:14
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=4, train_loss=0.721111, train_acc=0.742898, train_speed=596.120631 samples/sec
+valid_loss=0.467993, valid_acc=0.849306, valid_acc_std= 0.017322, valid_speed=422.003714 samples/sec
+escape time = 2025-09-21 08:40:23
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=5, train_loss=0.604407, train_acc=0.780682, train_speed=598.414458 samples/sec
+valid_loss=0.618544, valid_acc=0.788889, valid_acc_std= 0.019032, valid_speed=430.668055 samples/sec
+escape time = 2025-09-21 08:39:56
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=6, train_loss=0.519990, train_acc=0.811293, train_speed=613.156569 samples/sec
+valid_loss=0.471796, valid_acc=0.847222, valid_acc_std= 0.032736, valid_speed=441.957204 samples/sec
+escape time = 2025-09-21 08:38:35
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=7, train_loss=0.428721, train_acc=0.843501, train_speed=605.759989 samples/sec
+valid_loss=0.430967, valid_acc=0.867014, valid_acc_std= 0.019032, valid_speed=435.043429 samples/sec
+escape time = 2025-09-21 08:39:05
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=8, train_loss=0.385655, train_acc=0.857884, train_speed=621.644640 samples/sec
+valid_loss=0.423487, valid_acc=0.864931, valid_acc_std= 0.014713, valid_speed=442.102765 samples/sec
+escape time = 2025-09-21 08:37:49
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=9, train_loss=0.318243, train_acc=0.882812, train_speed=587.264880 samples/sec
+valid_loss=0.342879, valid_acc=0.889583, valid_acc_std= 0.016628, valid_speed=425.167609 samples/sec
+escape time = 2025-09-21 08:40:21
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=10, train_loss=0.322864, train_acc=0.883878, train_speed=603.580704 samples/sec
+valid_loss=0.381054, valid_acc=0.892361, valid_acc_std= 0.022869, valid_speed=461.245632 samples/sec
+escape time = 2025-09-21 08:38:35
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=11, train_loss=0.280695, train_acc=0.898544, train_speed=613.216742 samples/sec
+valid_loss=0.289775, valid_acc=0.914236, valid_acc_std= 0.020496, valid_speed=457.205980 samples/sec
+escape time = 2025-09-21 08:37:53
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=12, train_loss=0.258724, train_acc=0.903089, train_speed=611.509610 samples/sec
+valid_loss=0.306428, valid_acc=0.922222, valid_acc_std= 0.025400, valid_speed=415.985978 samples/sec
+escape time = 2025-09-21 08:38:26
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=13, train_loss=0.229157, train_acc=0.919638, train_speed=602.408616 samples/sec
+valid_loss=0.295156, valid_acc=0.928125, valid_acc_std= 0.016303, valid_speed=439.488247 samples/sec
+escape time = 2025-09-21 08:38:35
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=14, train_loss=0.192685, train_acc=0.931072, train_speed=619.385005 samples/sec
+valid_loss=0.301406, valid_acc=0.934375, valid_acc_std= 0.010956, valid_speed=426.912531 samples/sec
+escape time = 2025-09-21 08:37:35
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=15, train_loss=0.194803, train_acc=0.931534, train_speed=598.650646 samples/sec
+valid_loss=0.197807, valid_acc=0.959028, valid_acc_std= 0.009821, valid_speed=416.334792 samples/sec
+escape time = 2025-09-21 08:38:55
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=16, train_loss=0.148776, train_acc=0.949822, train_speed=589.765017 samples/sec
+valid_loss=0.282636, valid_acc=0.953472, valid_acc_std= 0.023102, valid_speed=441.606159 samples/sec
+escape time = 2025-09-21 08:39:01
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=17, train_loss=0.137320, train_acc=0.953516, train_speed=615.356238 samples/sec
+valid_loss=0.285054, valid_acc=0.947222, valid_acc_std= 0.016628, valid_speed=418.882624 samples/sec
+escape time = 2025-09-21 08:37:39
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=18, train_loss=0.133363, train_acc=0.955930, train_speed=600.933743 samples/sec
+valid_loss=0.193282, valid_acc=0.958333, valid_acc_std= 0.016628, valid_speed=447.177384 samples/sec
+escape time = 2025-09-21 08:38:04
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=19, train_loss=0.093106, train_acc=0.968643, train_speed=589.859277 samples/sec
+valid_loss=0.276383, valid_acc=0.954861, valid_acc_std= 0.015285, valid_speed=456.534013 samples/sec
+escape time = 2025-09-21 08:38:29
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=20, train_loss=0.075111, train_acc=0.974822, train_speed=619.626192 samples/sec
+valid_loss=0.223221, valid_acc=0.960069, valid_acc_std= 0.005856, valid_speed=466.474589 samples/sec
+escape time = 2025-09-21 08:36:37
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=21, train_loss=0.082068, train_acc=0.973153, train_speed=606.134331 samples/sec
+valid_loss=0.256527, valid_acc=0.952778, valid_acc_std= 0.014344, valid_speed=455.309328 samples/sec
+escape time = 2025-09-21 08:37:21
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=22, train_loss=0.066617, train_acc=0.977628, train_speed=606.786197 samples/sec
+valid_loss=0.216725, valid_acc=0.962153, valid_acc_std= 0.010956, valid_speed=436.327264 samples/sec
+escape time = 2025-09-21 08:37:24
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=23, train_loss=0.062275, train_acc=0.979510, train_speed=599.342862 samples/sec
+valid_loss=0.282029, valid_acc=0.964931, valid_acc_std= 0.015768, valid_speed=443.625667 samples/sec
+escape time = 2025-09-21 08:37:37
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=24, train_loss=0.051439, train_acc=0.983026, train_speed=603.062880 samples/sec
+valid_loss=0.313276, valid_acc=0.959722, valid_acc_std= 0.014930, valid_speed=439.815257 samples/sec
+escape time = 2025-09-21 08:37:21
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=25, train_loss=0.052349, train_acc=0.982102, train_speed=598.530450 samples/sec
+valid_loss=0.231985, valid_acc=0.976736, valid_acc_std= 0.009711, valid_speed=449.789890 samples/sec
+escape time = 2025-09-21 08:37:22
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=26, train_loss=0.037767, train_acc=0.987251, train_speed=610.642010 samples/sec
+valid_loss=0.215567, valid_acc=0.962847, valid_acc_std= 0.007884, valid_speed=436.739888 samples/sec
+escape time = 2025-09-21 08:36:50
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=27, train_loss=0.043632, train_acc=0.985014, train_speed=584.938658 samples/sec
+valid_loss=0.265424, valid_acc=0.962153, valid_acc_std= 0.015768, valid_speed=435.049806 samples/sec
+escape time = 2025-09-21 08:37:57
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=28, train_loss=0.038443, train_acc=0.987713, train_speed=606.291703 samples/sec
+valid_loss=0.239453, valid_acc=0.967708, valid_acc_std= 0.018749, valid_speed=439.160254 samples/sec
+escape time = 2025-09-21 08:36:47
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=29, train_loss=0.028443, train_acc=0.990554, train_speed=612.883581 samples/sec
+valid_loss=0.180772, valid_acc=0.974306, valid_acc_std= 0.011434, valid_speed=466.250120 samples/sec
+escape time = 2025-09-21 08:36:09
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=30, train_loss=0.023815, train_acc=0.992045, train_speed=626.486054 samples/sec
+valid_loss=0.287601, valid_acc=0.961806, valid_acc_std= 0.009711, valid_speed=439.974874 samples/sec
+escape time = 2025-09-21 08:35:43
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=31, train_loss=0.020899, train_acc=0.992614, train_speed=608.173609 samples/sec
+valid_loss=0.223862, valid_acc=0.961458, valid_acc_std= 0.016104, valid_speed=431.383205 samples/sec
+escape time = 2025-09-21 08:36:25
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=32, train_loss=0.029222, train_acc=0.990234, train_speed=607.063102 samples/sec
+valid_loss=0.305367, valid_acc=0.969097, valid_acc_std= 0.011434, valid_speed=420.370132 samples/sec
+escape time = 2025-09-21 08:36:27
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=33, train_loss=0.025077, train_acc=0.991868, train_speed=599.942822 samples/sec
+valid_loss=0.211403, valid_acc=0.963194, valid_acc_std= 0.007884, valid_speed=442.962555 samples/sec
+escape time = 2025-09-21 08:36:26
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=34, train_loss=0.016688, train_acc=0.994638, train_speed=612.709956 samples/sec
+valid_loss=0.277429, valid_acc=0.973611, valid_acc_std= 0.009711, valid_speed=442.641149 samples/sec
+escape time = 2025-09-21 08:35:50
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=35, train_loss=0.016309, train_acc=0.994354, train_speed=611.604326 samples/sec
+valid_loss=0.228118, valid_acc=0.972917, valid_acc_std= 0.011340, valid_speed=441.307693 samples/sec
+escape time = 2025-09-21 08:35:47
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=36, train_loss=0.018786, train_acc=0.993963, train_speed=604.626922 samples/sec
+valid_loss=0.180511, valid_acc=0.967014, valid_acc_std= 0.013418, valid_speed=433.925766 samples/sec
+escape time = 2025-09-21 08:35:59
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=37, train_loss=0.009865, train_acc=0.996804, train_speed=600.154607 samples/sec
+valid_loss=0.304466, valid_acc=0.967361, valid_acc_std= 0.009374, valid_speed=432.697770 samples/sec
+escape time = 2025-09-21 08:36:02
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=38, train_loss=0.012875, train_acc=0.995632, train_speed=605.100774 samples/sec
+valid_loss=0.087683, valid_acc=0.981250, valid_acc_std= 0.014930, valid_speed=461.195848 samples/sec
+escape time = 2025-09-21 08:35:34
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=39, train_loss=0.008319, train_acc=0.996839, train_speed=616.395960 samples/sec
+valid_loss=0.241244, valid_acc=0.975694, valid_acc_std= 0.011340, valid_speed=422.597401 samples/sec
+escape time = 2025-09-21 08:35:22
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=40, train_loss=0.006470, train_acc=0.997692, train_speed=599.647800 samples/sec
+valid_loss=0.322952, valid_acc=0.967361, valid_acc_std= 0.011434, valid_speed=445.458608 samples/sec
+escape time = 2025-09-21 08:35:38
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=41, train_loss=0.007723, train_acc=0.997621, train_speed=598.360629 samples/sec
+valid_loss=0.228342, valid_acc=0.972917, valid_acc_std= 0.009711, valid_speed=427.106256 samples/sec
+escape time = 2025-09-21 08:35:39
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=42, train_loss=0.006920, train_acc=0.997692, train_speed=612.880410 samples/sec
+valid_loss=0.225450, valid_acc=0.977431, valid_acc_std= 0.014713, valid_speed=447.987869 samples/sec
+escape time = 2025-09-21 08:35:01
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=43, train_loss=0.007813, train_acc=0.997656, train_speed=614.309388 samples/sec
+valid_loss=0.265869, valid_acc=0.968403, valid_acc_std= 0.009259, valid_speed=418.680032 samples/sec
+escape time = 2025-09-21 08:35:02
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=44, train_loss=0.005315, train_acc=0.998224, train_speed=609.225262 samples/sec
+valid_loss=0.323827, valid_acc=0.973611, valid_acc_std= 0.009711, valid_speed=438.547827 samples/sec
+escape time = 2025-09-21 08:34:57
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=45, train_loss=0.006364, train_acc=0.997905, train_speed=597.482161 samples/sec
+valid_loss=0.368884, valid_acc=0.965278, valid_acc_std= 0.012763, valid_speed=436.038233 samples/sec
+escape time = 2025-09-21 08:35:09
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=46, train_loss=0.004685, train_acc=0.998544, train_speed=590.718578 samples/sec
+valid_loss=0.343456, valid_acc=0.972222, valid_acc_std= 0.008784, valid_speed=432.771436 samples/sec
+escape time = 2025-09-21 08:35:11
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=47, train_loss=0.003845, train_acc=0.998757, train_speed=616.072700 samples/sec
+valid_loss=0.241198, valid_acc=0.973264, valid_acc_std= 0.013418, valid_speed=437.495009 samples/sec
+escape time = 2025-09-21 08:34:31
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=48, train_loss=0.003783, train_acc=0.998793, train_speed=605.357117 samples/sec
+valid_loss=0.275195, valid_acc=0.972569, valid_acc_std= 0.018806, valid_speed=441.946451 samples/sec
+escape time = 2025-09-21 08:34:37
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=49, train_loss=0.004972, train_acc=0.998331, train_speed=599.522681 samples/sec
+valid_loss=0.318877, valid_acc=0.971181, valid_acc_std= 0.010956, valid_speed=439.414930 samples/sec
+escape time = 2025-09-21 08:34:37
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=50, train_loss=0.002555, train_acc=0.999396, train_speed=611.799955 samples/sec
+valid_loss=0.254358, valid_acc=0.970833, valid_acc_std= 0.010956, valid_speed=451.773019 samples/sec
+escape time = 2025-09-21 08:34:16
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=51, train_loss=0.003290, train_acc=0.998970, train_speed=600.427738 samples/sec
+valid_loss=0.334567, valid_acc=0.971528, valid_acc_std= 0.008784, valid_speed=432.306375 samples/sec
+escape time = 2025-09-21 08:34:23
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=52, train_loss=0.003236, train_acc=0.998935, train_speed=622.083795 samples/sec
+valid_loss=0.267951, valid_acc=0.972222, valid_acc_std= 0.010956, valid_speed=440.945542 samples/sec
+escape time = 2025-09-21 08:33:57
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=53, train_loss=0.003145, train_acc=0.999077, train_speed=600.387261 samples/sec
+valid_loss=0.334232, valid_acc=0.971181, valid_acc_std= 0.009821, valid_speed=435.579479 samples/sec
+escape time = 2025-09-21 08:34:08
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=54, train_loss=0.002820, train_acc=0.999219, train_speed=607.340988 samples/sec
+valid_loss=0.306332, valid_acc=0.971528, valid_acc_std= 0.007884, valid_speed=429.979315 samples/sec
+escape time = 2025-09-21 08:33:58
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=55, train_loss=0.003065, train_acc=0.999219, train_speed=595.914262 samples/sec
+valid_loss=0.285715, valid_acc=0.975694, valid_acc_std= 0.009821, valid_speed=447.046280 samples/sec
+escape time = 2025-09-21 08:33:56
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=56, train_loss=0.001885, train_acc=0.999361, train_speed=616.357791 samples/sec
+valid_loss=0.279503, valid_acc=0.977431, valid_acc_std= 0.010956, valid_speed=426.102048 samples/sec
+escape time = 2025-09-21 08:33:40
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=57, train_loss=0.001703, train_acc=0.999432, train_speed=601.575222 samples/sec
+valid_loss=0.283346, valid_acc=0.973958, valid_acc_std= 0.010956, valid_speed=427.368004 samples/sec
+escape time = 2025-09-21 08:33:42
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=58, train_loss=0.002522, train_acc=0.999254, train_speed=595.838229 samples/sec
+valid_loss=0.288648, valid_acc=0.977083, valid_acc_std= 0.011340, valid_speed=447.871350 samples/sec
+escape time = 2025-09-21 08:33:35
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=59, train_loss=0.002378, train_acc=0.999219, train_speed=608.930449 samples/sec
+valid_loss=0.298455, valid_acc=0.977778, valid_acc_std= 0.014344, valid_speed=460.842772 samples/sec
+escape time = 2025-09-21 08:33:23
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=60, train_loss=0.001316, train_acc=0.999503, train_speed=605.137558 samples/sec
+valid_loss=0.275342, valid_acc=0.977083, valid_acc_std= 0.009374, valid_speed=757.713903 samples/sec
+escape time = 2025-09-21 08:32:58
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=61, train_loss=0.001829, train_acc=0.999396, train_speed=832.770632 samples/sec
+valid_loss=0.274404, valid_acc=0.975347, valid_acc_std= 0.009259, valid_speed=707.062942 samples/sec
+escape time = 2025-09-21 08:32:14
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=62, train_loss=0.002436, train_acc=0.999183, train_speed=921.528497 samples/sec
+valid_loss=0.275249, valid_acc=0.975694, valid_acc_std= 0.013095, valid_speed=663.841774 samples/sec
+escape time = 2025-09-21 08:32:02
+
+Namespace(config=[Path_fsr(./config/dvs_gesture.yaml, cwd=/home/xxx/user/xxxxxxx/event2vec)], seed_everything=0, trainer=Namespa
+ce(accelerator='auto', strategy='auto', devices=[0, 1, 2, 3], num_nodes=1, precision='bf16-mixed', logger=Namespace(class_path='
+lightning.pytorch.loggers.TensorBoardLogger', init_args=Namespace(save_dir='./dvs_gesture', name='lightning_logs', version=257,
+log_graph=False, default_hp_metric=True, prefix='', sub_dir=None, comment='', purge_step=None, max_queue=10, flush_secs=120, fil
+ename_suffix='')), callbacks=None, fast_dev_run=False, max_epochs=64, min_epochs=None, max_steps=-1, min_steps=None, max_time=No
+ne, limit_train_batches=None, limit_val_batches=None, limit_test_batches=None, limit_predict_batches=None, overfit_batches=0.0,
+val_check_interval=None, check_val_every_n_epoch=1, num_sanity_val_steps=None, log_every_n_steps=None, enable_checkpointing=None
+, enable_progress_bar=None, enable_model_summary=None, accumulate_grad_batches=1, gradient_clip_val=1.0, gradient_clip_algorithm
+='norm', deterministic=None, benchmark=None, inference_mode=True, use_distributed_sampler=True, profiler=None, detect_anomaly=Fa
+lse, barebones=False, plugins=None, sync_batchnorm=False, reload_dataloaders_every_n_epochs=0, default_root_dir='./dvs_gesture',
+ model_registry=None), model=Namespace(P=2, H=128, W=128, h=128, w=128, train_transform_args='RandomResize-0.8,1.2-0.8,1.2/Rando
+mRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256', train_t
+ransform_policy='RandomApply-0.6', test_transform_args='', backbone='manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0', n_classes
+=11, compile=False, lr=0.001, min_lr=0.0, batch_size=64, warmup_epochs=4, optimizer='adamw', lrs='CosineAnnealingLR', wd=0.0, la
+bel_smoothing=0.0, load=None), data=Namespace(name='dvs_gesture', root='/dev/shm/DVS128Gesture/events_np', sample_number=4096, s
+ampler='random_sample', norm_t='none', batch_size=64, num_workers=8, train_repeats=24, val_root=None, val_sample_number=None, va
+l_sampler=None, val_repeats=10, prefetch_factor=4), test_only=False, resume=None, optimizer=None, lr_scheduler=None)
+epoch=63, train_loss=0.002264, train_acc=0.999254, train_speed=955.181416 samples/sec
+`Trainer.fit` stopped: `max_epochs=64` reached.

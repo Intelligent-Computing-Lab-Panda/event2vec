@@ -1,7 +1,6 @@
 import datetime
-import math
 import time
-from collections import OrderedDict
+
 
 import lightning
 import torch
@@ -9,73 +8,32 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
 from torch import optim
-from torchmetrics import MeanMetric, Precision
+from torchmetrics import MeanMetric
 from torchmetrics.classification import Accuracy
-import event_transform, event_embedding
-import model_zoo
-
-
-
-def configure_param_lr_wd(m: nn.Module, lr: float, wd: float, encoder_lr_decay_rate: float=0.75, deacy_lr_encoder_layers:nn.Sequential=None):
-    p_flag = OrderedDict()
-    for p in m.parameters():
-        if p.requires_grad:
-            key = id(p)
-            assert key not in p_flag
-            p_flag[key] = {'params': p, 'weight_decay': wd, 'lr': lr}
-    weight_decay_modules = m
-    if hasattr(m, 'weight_decay_modules'):
-        weight_decay_modules = m.weight_decay_modules()
-
-    for module_name, module in weight_decay_modules.named_modules():
-        for param_name, param in module.named_parameters(recurse=False):
-            full_param_name = f"{module_name}.{param_name}" if module_name else param_name
-
-            # check if it needs weight_decay
-            if wd > 0:
-                if param_name in ('bias', 'class_token', 'mask_token', 'pos_embedding', 'pe_class_token') or \
-                        isinstance(module, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d, nn.LayerNorm, nn.RMSNorm, nn.Embedding, )):
-                    p_flag[id(param)]['weight_decay'] = 0.
-
-                elif 'token' in param_name:
-                    print(f'{full_param_name} is regarded as with weight decay.')
-
-    if deacy_lr_encoder_layers is not None:
-        depth = len(deacy_lr_encoder_layers)
-        for i in range(depth):
-            dlr = lr * (encoder_lr_decay_rate ** (depth - i))
-            for p in deacy_lr_encoder_layers[i].parameters():
-                if p.requires_grad:
-                    p_flag[id(p)]['lr'] = dlr
-
-
-
-    return p_flag.values()
-
+import event_transform, utils
+from model_zoo import custom
 
 
 class Event2VecClassifier(lightning.LightningModule):
     def __init__(self, P: int, H: int, W: int, h: int, w: int,
+                 d_model: int, d_feedforward: int, nheads: int, n_layers: int,
+                 n_classes: int, activation: str, mask_ratio:float, p_token_mix:float, p_intensity_drop:float, drop_path:float, pool_every_layer:int,
 
-                 train_transform_args: str,
-                 train_transform_policy: str,
-                 test_transform_args: str,
-
-                 backbone:str=None,
-
-                 n_classes: int = -1,
-
-                 compile: bool = False,
-                 lr: float = 1e-3,
-                 min_lr: float=0., # 1e-6 for finetune
-                 batch_size: int=-1,
-                 warmup_epochs:int=0,
+                train_transform_args: str,
+                train_transform_policy: str,
+                test_transform_args: str,
+                compile: bool = False,
+                lr: float = 1e-3,
+                min_lr: float=0., # 1e-6 for finetune
+                batch_size: int=-1,
+                warmup_epochs:int=0,
                 optimizer: str = 'adamw',
-                 lrs:str='CosineAnnealingLR',
-                 wd: float = 0.,
-                 label_smoothing: float = 0.,
-                 load:str=None,
-                 ):
+                lrs:str='CosineAnnealingLR',
+                wd: float = 0.,
+                label_smoothing: float = 0.,
+                load:str=None,
+                ):
+
         super().__init__()
 
         self.P = P
@@ -91,7 +49,7 @@ class Event2VecClassifier(lightning.LightningModule):
 
 
 
-        self.classifier = model_zoo.create_classifier(backbone=backbone, n_classes=n_classes)
+        self.classifier = custom.E2VNet(P=P, H=H, W=W, d_model=d_model, d_feedforward=d_feedforward, nheads=nheads, n_layers=n_layers, n_classes=n_classes, activation=activation, mask_ratio=mask_ratio, p_token_mix=p_token_mix, p_intensity_drop=p_intensity_drop, drop_path=drop_path, pool_every_layer=pool_every_layer)
 
 
 
@@ -106,9 +64,32 @@ class Event2VecClassifier(lightning.LightningModule):
         self.label_smoothing = label_smoothing
         self.n_classes = n_classes
 
+        if self.classifier.self_supervised_training:
 
-        self.train_acc = Accuracy(task="multiclass", num_classes=n_classes)
-        self.valid_acc = Accuracy(task="multiclass", num_classes=n_classes)
+            self.train_acc = nn.ModuleDict({
+                'p_accuracy': MeanMetric(),
+                'mae_y': MeanMetric(),
+                'mae_x': MeanMetric(),
+                'exact_match_accuracy': MeanMetric(),
+                'neighbor_accuracy': MeanMetric()})
+            self.valid_acc = nn.ModuleDict({
+                'p_accuracy': MeanMetric(),
+                'mae_y': MeanMetric(),
+                'mae_x': MeanMetric(),
+                'exact_match_accuracy': MeanMetric(),
+                'neighbor_accuracy': MeanMetric()})
+
+            self.test_acc = nn.ModuleDict({
+                'p_accuracy': MeanMetric(),
+                'mae_y': MeanMetric(),
+                'mae_x': MeanMetric(),
+                'exact_match_accuracy': MeanMetric(),
+                'neighbor_accuracy': MeanMetric()})
+
+        else:
+            self.train_acc = Accuracy(task="multiclass", num_classes=n_classes)
+            self.valid_acc = Accuracy(task="multiclass", num_classes=n_classes)
+            self.test_acc = Accuracy(task="multiclass", num_classes=n_classes)
 
 
 
@@ -118,6 +99,7 @@ class Event2VecClassifier(lightning.LightningModule):
 
         self.train_loss = MeanMetric()
         self.valid_loss = MeanMetric()
+        self.test_loss = MeanMetric()
 
         self.compile_flag = compile
         self.print_info = ''
@@ -131,66 +113,145 @@ class Event2VecClassifier(lightning.LightningModule):
             if self.global_rank == 0:
                 if incompatible_keys.missing_keys:
                     print('missing state dict keys:\n', incompatible_keys)
+                else:
+                    print('all keys are loaded')
 
-
-        n_param = 0
+        n_p = 0
         for p in self.parameters():
             if p.requires_grad:
-                n_param += p.numel()
+                n_p += p.numel()
+        print('params in MB', n_p * 4 / 1024 / 1024)
 
-        print('param in MB:', n_param * 4 / 1024 / 1024)
-        time.sleep(1)
 
     def training_step(self, batch, batch_idx):
-        xytp, valid_mask, label = batch
-        self.train_samples += label.shape[0]
-        outputs = self(xytp, valid_mask)
+        xytp, intensity, valid_mask, target = batch
+        self.train_samples += target.shape[0]
+        outputs, target = self(xytp, intensity, valid_mask, target)
 
 
+        if self.classifier.self_supervised_training:
+            n_predicts, metrics, loss = outputs
+            for key, value in metrics.items():
+                self.train_acc[key].update(value, weight=n_predicts)
+        else:
+            label_predicted = outputs
 
-        label_predicted = outputs
-
-        loss = F.cross_entropy(label_predicted, label, label_smoothing=self.label_smoothing)
-
-        self.train_acc.update(label_predicted, label)
+            loss = F.cross_entropy(label_predicted, target, label_smoothing=self.label_smoothing)
+            if target.dim() == 2:
+                target = target.argmax(1)
+            self.train_acc.update(label_predicted, target)
 
 
         self.train_loss.update(loss.data)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        xytp, valid_mask, label = batch
+        if self.trainer.datamodule.val_set.repeats > 1:
+            xytp, intensity, valid_mask, target, indices = batch
+        else:
+            xytp, intensity, valid_mask, target = batch
 
 
 
-        self.val_samples += label.shape[0]
+        self.val_samples += target.shape[0]
 
-        outputs = self(xytp, valid_mask)
+        outputs, target = self(xytp, intensity, valid_mask, target)
 
+        if self.classifier.self_supervised_training:
+            n_predicts, metrics, loss = outputs
+            for key, value in metrics.items():
+                self.valid_acc[key].update(value, weight=n_predicts)
+        else:
+            label_predicted = outputs
+            loss = F.cross_entropy(label_predicted, target, label_smoothing=self.label_smoothing)
 
-        label_predicted = outputs
-        loss = F.cross_entropy(label_predicted, label, label_smoothing=self.label_smoothing)
+            if target.dim() == 2:
+                target = target.argmax(1)
+            self.valid_acc.update(label_predicted, target)
 
-        self.valid_acc.update(label_predicted, label)
+            if self.trainer.datamodule.val_set.repeats > 1:
+                repeat_indices = indices // self.n_unique_samples
+                correct_mask = (label_predicted.argmax(1) == target)
+                batch_total_counts = torch.bincount(repeat_indices, minlength=self.trainer.datamodule.val_set.repeats)
+                correct_repeat_indices = repeat_indices[correct_mask]
+                batch_correct_counts = torch.bincount(correct_repeat_indices, minlength=self.trainer.datamodule.val_set.repeats)
 
-
-
+                self.correct_counts_per_repeat += batch_correct_counts
+                self.total_counts_per_repeat += batch_total_counts
 
         self.valid_loss.update(loss.data)
         return loss
 
+    def test_step(self, batch, batch_idx):
+        if self.trainer.datamodule.test_set.repeats > 1:
+            xytp, intensity, valid_mask, target, indices = batch
+        else:
+            xytp, intensity, valid_mask, target = batch
+
+
+
+        self.test_samples += target.shape[0]
+
+        outputs, target = self(xytp, intensity, valid_mask, target)
+
+        if self.classifier.self_supervised_training:
+            n_predicts, metrics, loss = outputs
+            for key, value in metrics.items():
+                self.test_acc[key].update(value, weight=n_predicts)
+        else:
+            label_predicted = outputs
+            loss = F.cross_entropy(label_predicted, target, label_smoothing=self.label_smoothing)
+
+            if target.dim() == 2:
+                target = target.argmax(1)
+            self.test_acc.update(label_predicted, target)
+
+            if self.trainer.datamodule.test_set.repeats > 1:
+                repeat_indices = indices // self.n_unique_samples
+                correct_mask = (label_predicted.argmax(1) == target)
+                batch_total_counts = torch.bincount(repeat_indices, minlength=self.trainer.datamodule.test_set.repeats)
+                correct_repeat_indices = repeat_indices[correct_mask]
+                batch_correct_counts = torch.bincount(correct_repeat_indices, minlength=self.trainer.datamodule.test_set.repeats)
+
+                self.correct_counts_per_repeat += batch_correct_counts
+                self.total_counts_per_repeat += batch_total_counts
+
+        self.test_loss.update(loss.data)
+        return loss
+
+  
 
     def on_validation_epoch_start(self):
         self.val_samples = 0
         self.valid_start_time = time.time()
 
+        if self.trainer.datamodule.val_set.repeats > 1:
+            self.n_unique_samples = len(self.trainer.datamodule.val_set) // self.trainer.datamodule.val_set.repeats
+            self.correct_counts_per_repeat = torch.zeros(self.trainer.datamodule.val_set.repeats, device=self.device)
+            self.total_counts_per_repeat = torch.zeros(self.trainer.datamodule.val_set.repeats, device=self.device)
 
     def on_validation_epoch_end(self):
 
-        valid_acc = self.valid_acc.compute()
-        self.valid_acc.reset()
-        self.log('valid_acc', valid_acc, on_epoch=True)
+        if self.classifier.self_supervised_training:
+            valid_acc = {}
+            for key in self.valid_acc.keys():
+                value = self.valid_acc[key].compute()
+                valid_acc[key] = value
+                self.valid_acc[key].reset()
+                self.log('val_' + key, value, on_epoch=True)
 
+        else:
+            valid_acc = self.valid_acc.compute()
+            self.valid_acc.reset()
+            self.log('valid_acc', valid_acc, on_epoch=True)
+            valid_acc_std = 0.
+            if self.trainer.datamodule.val_set.repeats > 1:
+                self.all_gather(self.correct_counts_per_repeat).sum(0)
+                self.all_gather(self.total_counts_per_repeat).sum(0)
+                accuracies_per_repeat = self.correct_counts_per_repeat / self.total_counts_per_repeat
+
+                valid_acc_std = accuracies_per_repeat.std()
+                self.log('valid_acc_std', valid_acc_std, on_epoch=True)
 
         valid_loss = self.valid_loss.compute()
 
@@ -203,12 +264,21 @@ class Event2VecClassifier(lightning.LightningModule):
         self.val_samples = 0
 
         if self.global_rank == 0:
-            print(
-                f'valid_loss={valid_loss:.3f}, valid_acc={valid_acc:.3f}, valid_speed={self.valid_speed:.3f} samples/sec')
+            if self.classifier.self_supervised_training:
+                print(
+                    f'valid_loss={valid_loss:.6f}, valid_speed={self.valid_speed:.6f} samples/sec', end=', ')
+                for key, value in valid_acc.items():
+                    print(f'{key}={value: .6f}', end=', ')
+                print('\n')
+            else:
+                print(
+                    f'valid_loss={valid_loss:.6f}, valid_acc={valid_acc:.6f}, valid_acc_std={valid_acc_std: .6f}, valid_speed={self.valid_speed:.6f} samples/sec')
 
 
             print(
                 f'escape time = {(datetime.datetime.now() + datetime.timedelta(seconds=(self.train_duration + self.valid_duration) * (self.trainer.max_epochs - self.current_epoch))).strftime("%Y-%m-%d %H:%M:%S")}\n')
+
+
 
 
     def on_train_epoch_start(self):
@@ -216,15 +286,33 @@ class Event2VecClassifier(lightning.LightningModule):
         self.train_start_time = time.time()
 
     def on_train_epoch_end(self):
-        train_acc = self.train_acc.compute()
-        self.train_acc.reset()
 
+
+        if self.classifier.self_supervised_training:
+            # start_ratio = 0.05
+            # end_ratio = 0.4
+            # current_ratio = start_ratio + (end_ratio - start_ratio) * (
+            #             self.trainer.current_epoch / self.trainer.max_epochs)
+            # self.classifier.mask_ratio = current_ratio
+            # if self.global_rank == 0:
+            #     print('set mask ratio =', current_ratio)
+
+            train_acc = {}
+            for key in self.train_acc.keys():
+                value = self.train_acc[key].compute()
+                train_acc[key] = value
+                self.train_acc[key].reset()
+                self.log('train_' + key, value, on_epoch=True)
+
+        else:
+            train_acc = self.train_acc.compute()
+            self.train_acc.reset()
+            self.log('train_acc', train_acc, on_epoch=True)
 
         train_loss = self.train_loss.compute()
         if self.global_rank == 0:
             print(self.print_info)
 
-        self.log('train_acc', train_acc, on_epoch=True)
 
 
         self.log('train_loss', train_loss, on_epoch=True)
@@ -235,29 +323,66 @@ class Event2VecClassifier(lightning.LightningModule):
         self.train_speed = self.train_samples / self.train_duration * self.trainer.world_size
         self.train_samples = 0
         if self.global_rank == 0:
-            print(
-                f'epoch={self.current_epoch}, train_loss={train_loss:.3f}, train_acc={train_acc:.3f}, train_speed={self.train_speed:.3f} samples/sec')
+            if self.classifier.self_supervised_training:
+                print(
+                    f'epoch={self.current_epoch}, train_loss={train_loss:.6f}, train_speed={self.train_speed:.6f} samples/sec')
+                for key, value in train_acc.items():
+                    print(f'{key}={value: .6f}', end=', ')
+                print('\n')
+            else:
+                print(
+                    f'epoch={self.current_epoch}, train_loss={train_loss:.6f}, train_acc={train_acc:.6f}, train_speed={self.train_speed:.6f} samples/sec')
 
 
 
-    def forward(self, xytp, valid_mask):
+    def forward(self, xytp, intensity, valid_mask, target):
         x = xytp[0]
         y = xytp[1]
         t = xytp[2]
         p = xytp[3]
 
-        p, y, x, t, valid_mask = self.transforms(p, y, x, t, valid_mask)
+        if self.training and self.trainer.datamodule.name == 'n_cars':
+            # 针对n_cars额外增加的
+            # 1. 保存原始样本的副本以备回退
+            p_orig, y_orig, x_orig, t_orig, valid_mask_orig = p.clone(), y.clone(), x.clone(), t.clone(), valid_mask.clone()
+
+            # 2. 应用数据增强
+            p_aug, y_aug, x_aug, t_aug, valid_mask_aug, target = self.transforms(p, y, x, t, valid_mask, target)
+
+            # 3. 计算每个样本增强后的有效事件数量
+            # valid_mask_aug 的形状是 [B, L], .sum(dim=1) 后得到形状为 [B] 的张量
+            valid_lengths = valid_mask_aug.sum(dim=1)
+
+            # 4. 找出需要恢复的样本
+            # revert_mask 的形状是 [B], True 表示该样本需要被恢复
+            revert_mask = valid_lengths < 16
+
+            # 5. 如果有任何样本需要恢复，就执行替换操作
+            if torch.any(revert_mask):
+                # 为了使用 torch.where，需要将 revert_mask 的维度从 [B] 扩展到 [B, 1]，
+                # 以便与形状为 [B, L] 的张量进行广播操作
+                revert_mask_expanded = revert_mask.unsqueeze(1)
+
+                # 使用 torch.where 根据 revert_mask_expanded 的值，
+                # 从原始张量 (p_orig, ...) 或增强后的张量 (p_aug, ...) 中选择数据
+                p = torch.where(revert_mask_expanded, p_orig, p_aug)
+                y = torch.where(revert_mask_expanded, y_orig, y_aug)
+                x = torch.where(revert_mask_expanded, x_orig, x_aug)
+                t = torch.where(revert_mask_expanded, t_orig, t_aug)
+                valid_mask = torch.where(revert_mask_expanded, valid_mask_orig, valid_mask_aug)
+            else:
+                # 如果没有样本需要恢复，则直接使用增强后的结果
+                p, y, x, t, valid_mask = p_aug, y_aug, x_aug, t_aug, valid_mask_aug
+        else:
+            p, y, x, t, valid_mask, target = self.transforms(p, y, x, t, valid_mask, target)
         '''
         event transform (data augmentation)
         '''
-
-
-
         t = t - t[:, 0].unsqueeze(1)
         '''
         let t start from 0
         '''
-        return self.classifier(p, y, x, t, valid_mask)
+        return self.classifier(p, y, x, t, intensity, valid_mask, target)
 
 
 
@@ -273,21 +398,16 @@ class Event2VecClassifier(lightning.LightningModule):
 
     def configure_optimizers(self):
         lr = self.lr * self.batch_size * self.trainer.world_size / 256
-        # if self.load is None:
-        #     encoder_lr_decay_rate = -1
-        #     deacy_lr_encoder_layers = None
-        # else:
-        #     encoder_lr_decay_rate = 0.75
-        #     deacy_lr_encoder_layers = self.classifier.deacy_lr_encoder_layers
-
         encoder_lr_decay_rate = -1
         deacy_lr_encoder_layers = None
-        param_groups = configure_param_lr_wd(self.classifier, lr, self.wd, encoder_lr_decay_rate, deacy_lr_encoder_layers)
+        param_groups = utils.configure_param_lr_wd(self.classifier, lr, self.wd, encoder_lr_decay_rate, deacy_lr_encoder_layers)
         # check
         assert len(list(self.parameters())) == len(list(self.classifier.parameters()))
 
         if self.optimizer_name == 'adamw':
-            optimizer = optim.AdamW(param_groups, fused=True)
+            optimizer = optim.AdamW(param_groups, fused=self.trainer.gradient_clip_algorithm is None)
+        elif self.optimizer_name == 'sgd':
+            optimizer = optim.SGD(param_groups, momentum=0.9, fused=self.trainer.gradient_clip_algorithm is None)
         else:
             raise NotImplementedError(self.optimizer_name)
 

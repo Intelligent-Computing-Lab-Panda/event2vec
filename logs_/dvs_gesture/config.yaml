@@ -1,4 +1,4 @@
-# lightning.pytorch==2.5.1.post0
+# lightning.pytorch==2.5.3
 seed_everything: 0
 trainer:
   accelerator: auto
@@ -9,11 +9,25 @@ trainer:
   - 2
   - 3
   num_nodes: 1
-  precision: 32
-  logger: null
+  precision: bf16-mixed
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: ./dvs_gesture
+      name: lightning_logs
+      version: 257
+      log_graph: false
+      default_hp_metric: true
+      prefix: ''
+      sub_dir: null
+      comment: ''
+      purge_step: null
+      max_queue: 10
+      flush_secs: 120
+      filename_suffix: ''
   callbacks: null
   fast_dev_run: false
-  max_epochs: 8
+  max_epochs: 64
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -31,8 +45,8 @@ trainer:
   enable_progress_bar: null
   enable_model_summary: null
   accumulate_grad_batches: 1
-  gradient_clip_val: null
-  gradient_clip_algorithm: null
+  gradient_clip_val: 1.0
+  gradient_clip_algorithm: norm
   deterministic: null
   benchmark: null
   inference_mode: true
@@ -51,34 +65,35 @@ model:
   W: 128
   h: 128
   w: 128
-  train_transform_args: RandomChunkWrap-4,256-0.8,1.2/RandomChunkDrop-4,256/RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomTranslate-16,16
-  train_transform_policy: RandomApply-0.5
+  train_transform_args: RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-10/RandomShear-0.02,0.02/RandomTranslate-16,16/RandomErasing-128,128-0.1-16,16/RandomChunkDrop-8,256
+  train_transform_policy: RandomApply-0.6
   test_transform_args: ''
-  backbone: DVSGestureNet-2,128,128-128,256,4,relu
+  backbone: manual_mlp-2,128,128,2048-0,64,128,2,relu,0-0-0
   n_classes: 11
   compile: false
   lr: 0.001
-  min_lr: 1.0e-06
+  min_lr: 0.0
   batch_size: 64
-  warmup_epochs: 0
+  warmup_epochs: 4
   optimizer: adamw
   lrs: CosineAnnealingLR
-  wd: 2.0
+  wd: 0.0
   label_smoothing: 0.0
   load: null
 data:
   name: dvs_gesture
   root: /dev/shm/DVS128Gesture/events_np
-  sample_number: 8192
+  sample_number: 4096
   sampler: random_sample
   norm_t: none
   batch_size: 64
   num_workers: 8
-  train_full_sample: true
+  train_repeats: 24
   val_root: null
   val_sample_number: null
   val_sampler: null
-  val_repeats: 8
+  val_repeats: 10
+  prefetch_factor: 4
 test_only: false
 resume: null
 optimizer: null

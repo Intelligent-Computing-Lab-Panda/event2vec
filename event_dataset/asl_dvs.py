@@ -1,10 +1,9 @@
-import os
 import types
 from .utils import EventNPDataset
 
 class ASLDVS(EventNPDataset):
-    def __init__(self, training: bool, root: str, sample_number: int, sampler: types.FunctionType, norm_t: str, full_sample: bool, return_index:bool, repeats:int):
-        super().__init__(training=training, root=root, sample_number=sample_number, sampler=sampler, norm_t=norm_t, full_sample=full_sample, return_index=return_index, repeats=repeats)
+    def __init__(self, training: bool, root: str, sample_number: int, sampler: types.FunctionType, repeats:int=1):
+        super().__init__(training=training, root=root, sample_number=sample_number, sampler=sampler, repeats=repeats)
 
         train_ratio = 0.8
         num_classes = 24
@@ -29,7 +28,6 @@ class ASLDVS(EventNPDataset):
         del self.class_to_idx
         del self.targets
 
-        self.t_max = 521217
 
     @staticmethod
     def num_classes():
@@ -43,11 +41,3 @@ class ASLDVS(EventNPDataset):
         W = 240
         return P, H, W
 
-    def statistics(self):
-        # t_min, t_max, n_min, n_max, n_events
-        if self.training:
-            t_min, t_max, n_min, n_max, n_events = 99, 521217, 195, 470435, 2268004196
-        else:
-            t_min, t_max, n_min, n_max, n_events = 2684, 521210, 198, 466524, 569412358
-
-        return {'t_min': t_min, 't_max': t_max, 'n_min': n_min, 'n_max': n_max, 'n_events': n_events}

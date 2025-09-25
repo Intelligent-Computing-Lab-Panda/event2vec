@@ -1,19 +1,36 @@
-# lightning.pytorch==2.5.1.post0
+# lightning.pytorch==2.5.3
 seed_everything: 0
 trainer:
   accelerator: auto
   strategy: auto
   devices:
   - 0
-  - 1
   - 2
   - 3
+  - 4
+  - 1
+  - 6
+  - 7
   num_nodes: 1
-  precision: 32
-  logger: null
+  precision: bf16-mixed
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: ./asl_dvs
+      name: lightning_logs
+      version: 5
+      log_graph: false
+      default_hp_metric: true
+      prefix: ''
+      sub_dir: null
+      comment: ''
+      purge_step: null
+      max_queue: 10
+      flush_secs: 120
+      filename_suffix: ''
   callbacks: null
   fast_dev_run: false
-  max_epochs: 128
+  max_epochs: 64
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -54,13 +71,13 @@ model:
   train_transform_args: ''
   train_transform_policy: ''
   test_transform_args: ''
-  backbone: ASLDVSNet-2,180,240-64,128,2,relu
+  backbone: manual_mlp-2,128,128,2048-0,64,128,2,relu,0
   n_classes: 24
   compile: false
   lr: 0.001
   min_lr: 1.0e-06
-  batch_size: 512
-  warmup_epochs: 0
+  batch_size: 64
+  warmup_epochs: 4
   optimizer: adamw
   lrs: CosineAnnealingLR
   wd: 0.0
@@ -69,16 +86,17 @@ model:
 data:
   name: asl_dvs
   root: /dev/shm/ASLDVS/events_np
-  sample_number: 512
+  sample_number: 1024
   sampler: random_sample
   norm_t: none
-  batch_size: 512
+  batch_size: 64
   num_workers: 8
   train_full_sample: false
+  train_repeats: 1
   val_root: null
   val_sample_number: null
   val_sampler: null
-  val_repeats: 8
+  val_repeats: 10
 test_only: false
 resume: null
 optimizer: null
