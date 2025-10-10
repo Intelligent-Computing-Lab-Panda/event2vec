@@ -341,40 +341,7 @@ class Event2VecClassifier(lightning.LightningModule):
         t = xytp[2]
         p = xytp[3]
 
-        if self.training and self.trainer.datamodule.name == 'n_cars':
-            # 针对n_cars额外增加的
-            # 1. 保存原始样本的副本以备回退
-            p_orig, y_orig, x_orig, t_orig, valid_mask_orig = p.clone(), y.clone(), x.clone(), t.clone(), valid_mask.clone()
-
-            # 2. 应用数据增强
-            p_aug, y_aug, x_aug, t_aug, valid_mask_aug, target = self.transforms(p, y, x, t, valid_mask, target)
-
-            # 3. 计算每个样本增强后的有效事件数量
-            # valid_mask_aug 的形状是 [B, L], .sum(dim=1) 后得到形状为 [B] 的张量
-            valid_lengths = valid_mask_aug.sum(dim=1)
-
-            # 4. 找出需要恢复的样本
-            # revert_mask 的形状是 [B], True 表示该样本需要被恢复
-            revert_mask = valid_lengths < 16
-
-            # 5. 如果有任何样本需要恢复，就执行替换操作
-            if torch.any(revert_mask):
-                # 为了使用 torch.where，需要将 revert_mask 的维度从 [B] 扩展到 [B, 1]，
-                # 以便与形状为 [B, L] 的张量进行广播操作
-                revert_mask_expanded = revert_mask.unsqueeze(1)
-
-                # 使用 torch.where 根据 revert_mask_expanded 的值，
-                # 从原始张量 (p_orig, ...) 或增强后的张量 (p_aug, ...) 中选择数据
-                p = torch.where(revert_mask_expanded, p_orig, p_aug)
-                y = torch.where(revert_mask_expanded, y_orig, y_aug)
-                x = torch.where(revert_mask_expanded, x_orig, x_aug)
-                t = torch.where(revert_mask_expanded, t_orig, t_aug)
-                valid_mask = torch.where(revert_mask_expanded, valid_mask_orig, valid_mask_aug)
-            else:
-                # 如果没有样本需要恢复，则直接使用增强后的结果
-                p, y, x, t, valid_mask = p_aug, y_aug, x_aug, t_aug, valid_mask_aug
-        else:
-            p, y, x, t, valid_mask, target = self.transforms(p, y, x, t, valid_mask, target)
+        p, y, x, t, valid_mask, target = self.transforms(p, y, x, t, valid_mask, target)
         '''
         event transform (data augmentation)
         '''
@@ -454,4 +421,5 @@ class Event2VecClassifier(lightning.LightningModule):
         if lr_scheduler is None:
             return optimizer
         else:
+
             return ([optimizer], [lr_scheduler])
