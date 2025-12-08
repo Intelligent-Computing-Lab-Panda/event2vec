@@ -31,6 +31,9 @@ triton.autotune = patched_autotune
 
 To re-enable the auto-tune function, simply comment out this line.
 
+If you want to achieve the highest training and inference throughput, please re-enable Triton's auto-tune and set the largest possible batch size (depending on the GPU you use). Note that when the network has many layers, Triton's auto-tune may take a very long time to run. This is why we have disabled this function by default in the code: because the current speed is actually fast enough.
+
+
 ## Checking Training Logs
 
 The full training logs and terminal outputs are provided in the `logs_` directory.
@@ -221,4 +224,5 @@ The resulting checkpoint is `dvs_lip_random_sampling.ckpt`.
       url={https://arxiv.org/abs/2504.15371}, 
 }
 ```
+
 
