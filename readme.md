@@ -2,11 +2,7 @@
 
 This repository contains the source code, training logs, and models for the article [Event2Vec: Processing Neuromorphic Events Directly with Vector Space Representations](https://arxiv.org/abs/2504.15371).
 
-If you are looking for code for old versions of the ArXiv paper, you can just checkout to the corresponding branch:
-
-arxiv_v1: https://github.com/Intelligent-Computing-Lab-Panda/event2vec/tree/arxiv_v1?tab=readme-ov-file
-
-arxiv_v2: https://github.com/Intelligent-Computing-Lab-Panda/event2vec/tree/arxiv_v2?tab=readme-ov-file
+If you are looking for code for old versions of the ArXiv paper, you can just checkout to the corresponding branch.
 
 ## Dependencies
 
@@ -135,7 +131,7 @@ The DVS-Lip dataset is already in a native NumPy format. Its directory structure
 You can run the k-means algorithm to cluster the dataset:
 
 ```
-python check_dataset.py
+python dvs_lip_kmean.py.py
 ```
 
 After processing, the dataset should have the following directory structure:
@@ -151,7 +147,7 @@ After processing, the dataset should have the following directory structure:
 
 ## Training Models and Checkpoints
 
-Checkpoints are available at https://huggingface.co/fangwei123456/event2vector_checkpoints.
+Checkpoints are available at https://huggingface.co/fangwei123456/event2vector_checkpoints/tree/main/checkpoints_v4
 
 You can use the `--data.root xxx` argument to override the default dataset path if necessary.
 
@@ -161,7 +157,7 @@ You can use the `--data.root xxx` argument to override the default dataset path 
 python train_script.py --config ./config/asl_dvs.yaml
 ```
 
-The resulting checkpoint will be saved as `asl_dvs.ckpt`.
+The resulting checkpoint is `checkpoints_v4/asl_dvs.ckpt`.
 
 ##### DVS Gesture
 
@@ -169,7 +165,7 @@ The resulting checkpoint will be saved as `asl_dvs.ckpt`.
 python train_script.py --config ./config/dvs_gesture.yaml
 ```
 
-The resulting checkpoint will be saved as `dvs_gesture.ckpt`.
+The resulting checkpoint is `checkpoints_v4/dvs_gesture.ckpt`.
 
 ##### DVS-Lip
 
@@ -179,14 +175,14 @@ The first step is to train the model on DVS-Lip in a self-supervised mode:
 python train_script.py --config ./config/dvs_lip_cluster_event_self_supervised_training.yaml
 ```
 
-The resulting checkpoint is `dvs_lip_cluster_event_self_supervised_training.ckpt`.
+The resulting checkpoint is `checkpoints_v4/dvs_lip/self_supervised_training.ckpt`.
 
 Then, you can train the classification model for DVS-Lip by loading the self-supervised pre-trained weights.
 
 For clustered events:
 
 ```
-python train_script.py --config ./config/dvs_lip_cluster_event.yaml --model.load ./checkpoints/dvs_lip_cluster_event_self_supervised_training.ckpt
+python train_script.py --config ./config/dvs_lip_cluster_event.yaml --model.load checkpoints_v4/dvs_lip/self_supervised_training.ckpt
 ```
 
 You should see output similar to this:
@@ -201,15 +197,7 @@ params in MB 18.307632446289062
 
 The missing keys correspond to the classification head. The unexpected keys belong to the module used for predicting coordinates in the self-supervised pre-training task. This is expected behavior and not a bug.
 
-The resulting checkpoint is `dvs_lip_cluster_event.ckpt`.
-
-For randomly sampled events:
-
-```
-python train_script.py --config ./config/dvs_lip_random_sampling.yaml --model.load ./checkpoints/dvs_lip_cluster_event_self_supervised_training.ckpt
-```
-
-The resulting checkpoint is `dvs_lip_random_sampling.ckpt`.
+The resulting checkpoint is `checkpoints_v4/dvs_lip/classification.ckpt`.
 
 ## Citation
 
@@ -224,5 +212,3 @@ The resulting checkpoint is `dvs_lip_random_sampling.ckpt`.
       url={https://arxiv.org/abs/2504.15371}, 
 }
 ```
-
-

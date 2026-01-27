@@ -31,9 +31,9 @@ class ToEventDomain(nn.Module):
         return f'H={self.H}, W={self.W}'
 
     def forward(self, p: torch.Tensor, y: torch.Tensor, x: torch.Tensor, t: torch.Tensor, valid_mask: torch.BoolTensor, target: torch.Tensor):
-        y = y.round_()
-        x = x.round_()
-        p = p.round_()
+        # y = y.round_()
+        # x = x.round_()
+        # p = p.round_()
 
         mask = (y >= 0) & (y < self.H)
         mask = mask & (x >= 0) & (x < self.W)
@@ -168,6 +168,28 @@ class Resize(nn.Module):
         return p, y, x, t, valid_mask, target
 
 
+class Downsample(nn.Module):
+    def __init__(self, H: int, W: int, h: int, w: int):
+        super().__init__()
+        self.H = H
+        self.W = W
+        self.h = h
+        self.w = w
+
+    def extra_repr(self) -> str:
+        return f'scale_y={self.h / self.H:.6f}, scale_x={self.w / self.W:.6f}'
+
+    def forward(self, p: torch.Tensor, y: torch.Tensor, x: torch.Tensor, t: torch.Tensor, valid_mask: torch.BoolTensor, target: torch.Tensor):
+        y = (y + 0.5) / self.H * self.h - 0.5
+        x = (x + 0.5) / self.W * self.w - 0.5
+        y = y.round().float()
+        x = x.round().float()
+
+        y = (y + 0.5) / self.h * self.H - 0.5
+        x = (x + 0.5) / self.w * self.W - 0.5
+
+        return p, y, x, t, valid_mask, target
+
 class RandomResize(nn.Module):
     def __init__(self, scale_y: tuple, scale_x: tuple):
         super().__init__()
@@ -213,12 +235,16 @@ class RandomRotation(nn.Module):
 
         x -= self.center_x
         y -= self.center_y
+        # x = x - self.center_x
+        # y = y - self.center_y
 
         x_ = x * cos_theta - y * sin_theta
         y_ = x * sin_theta + y * cos_theta
 
         x_ += self.center_x
         y_ += self.center_y
+        # x_ = x_ + self.center_x
+        # y_ = y_ + self.center_y
 
         return p, y_, x_, t, valid_mask, target
 
@@ -466,22 +492,32 @@ class RandomTemporalWrap(nn.Module):
         diff_t = torch.diff(t, dim=1)
         diff_t[invalid_mask[:, 1:]] = 0.
         scale = torch.rand_like(diff_t) * (self.scale_high - self.scale_low) + self.scale_low
-        diff_t *= scale
+        # diff_t *= scale
+        diff_t = diff_t * scale
         t = torch.cat((t[:, 0:1], t[:, 0:1] + torch.cumsum(diff_t, dim=1)), dim=1)
         t[invalid_mask] = -1.
         return p, y, x, t, valid_mask, target
 
-
 class RandomChunkWrap(nn.Module):
-    def __init__(self, n_chunk: int, max_mask_len: int, scale_low: float, scale_high: float):
+    """
+    正确实现的时间扭曲 (Time Warping) 版本。
+
+    此版本通过缩放时间差 (delta t, 或 dt)，然后重建绝对时间戳 t，
+    来模拟事件流在随机区块内的速度变化。
+    
+    这保证了时间戳的单调递增性，无需进行代价高昂且物理意义
+    不明确的排序操作。
+    """
+    def __init__(self, n_chunk: int, max_mask_ratio: float, scale_low: float, scale_high: float):
         super().__init__()
         self.n_chunk = n_chunk
-        self.max_mask_len = max_mask_len
+        assert 0.0 < max_mask_ratio <= 1.0, "max_mask_ratio 必须在 (0, 1] 范围内"
+        self.max_mask_ratio = max_mask_ratio
         self.scale_low = scale_low
         self.scale_high = scale_high
 
     def extra_repr(self) -> str:
-        return f'n_chunk={self.n_chunk}, max_mask_len={self.max_mask_len}'
+        return f'n_chunk={self.n_chunk}, max_mask_ratio={self.max_mask_ratio}'
 
     def forward(self, p: torch.Tensor, y: torch.Tensor, x: torch.Tensor, t: torch.Tensor, valid_mask: torch.BoolTensor, target: torch.Tensor):
         if t.dtype != torch.float:
@@ -490,38 +526,63 @@ class RandomChunkWrap(nn.Module):
         B, L = valid_mask.shape
         device = valid_mask.device
 
-        # 1. 生成每个 chunk 的随机长度
-        # shape: [B, n_chunk]
-        mask_lengths = torch.randint(1, self.max_mask_len + 1, (B, self.n_chunk), device=device)
-
-        # 2. 生成每个 chunk 的随机起始位置
-        # 为防止区间超出边界，我们从 [0, L - 1] 中采样
-        # shape: [B, n_chunk]
+        # --- 1. 计算要修改的 mask ---
+        # (这部分逻辑与之前完全相同)
+        event_lengths = valid_mask.sum(dim=1)
+        max_len_per_item = (event_lengths * self.max_mask_ratio).unsqueeze(1)
+        mask_lengths = (torch.rand(B, self.n_chunk, device=device) * max_len_per_item).int().clamp(min=1)
         mask_starts = torch.randint(0, L, (B, self.n_chunk), device=device)
-
-        # 3. 构建掩码 (高效的向量化方法)
-        # 创建一个序列索引 [0, 1, ..., L-1]
         indices = torch.arange(L, device=device).unsqueeze(0).unsqueeze(1)  # shape: [1, 1, L]
-
-        # 将 starts 和 lengths 扩展维度以进行广播
         starts = mask_starts.unsqueeze(2)  # shape: [B, n_chunk, 1]
         lengths = mask_lengths.unsqueeze(2)  # shape: [B, n_chunk, 1]
         ends = starts + lengths  # shape: [B, n_chunk, 1]
-
-        # 利用广播机制判断每个位置是否在任何一个 chunk 内
-        # (indices >= starts) & (indices < ends) 会生成一个 [B, n_chunk, L] 的布尔张量
-        # .any(dim=1) 在 n_chunk 维度上做 OR 操作，得到最终的掩码
         mask = (indices >= starts) & (indices < ends)
         mask = mask.any(dim=1)  # shape: [B, L]
-
-        # 4. 应用掩码
+        
+        # 关键：只在 'valid_mask' 为 True 的地方应用我们生成的 'mask'
         mask = valid_mask & mask
-        t_m = t[mask]
-        scale = torch.rand_like(t_m) * (self.scale_high - self.scale_low) + self.scale_low
-        t[mask] = t_m * scale
-        return p, y, x, t, valid_mask, target
+
+        # --- 2. 【核心修改】对 delta t (dt) 进行操作 ---
+
+        # 2a. 计算 delta t (dt)
+        # 我们使用 t[i] - t[i-1]，并假设 t[0] 的差值是 t[0] - 0
+        # t.new_zeros((B, 1)) 确保在正确设备上创建 (B, 1) 的 0 张量
+        dt = torch.diff(t, dim=1, prepend=t.new_zeros((B, 1)))
+        
+        # 2b. 生成缩放因子 (scale)
+        # 我们需要为 t 张量中的每个元素生成一个 scale
+        # (更高效的方法是只为 mask=True 的地方生成, 但
+        #  为整个张量生成再用 mask 替换更简洁)
+        #
+        # scale shape: [B, L]
+        scale = torch.rand(B, L, device=device) * (self.scale_high - self.scale_low) + self.scale_low
+
+        # 2c. 只在 mask 为 True 的地方应用缩放
+        # dt[mask] = dt[mask] * scale[mask]
+        # (注意：上面的操作在 torch < 1.9 中可能效率不高，用 where 更安全)
+        
+        # 使用 torch.where:
+        # dt_scaled = dt * scale
+        # dt = torch.where(mask, dt_scaled, dt)
+        
+        # 最直接的索引赋值 (在现代 PyTorch 中是高效的)
+        # 我们只缩放被选中的 dt
+
+        dt[mask] = dt[mask] * scale[mask]
 
 
+        # 2d. 从被缩放的 dt 重建 t
+        # (t_new[i] = dt[0] + dt[1] + ... + dt[i])
+        t_new = torch.cumsum(dt, dim=1)
+
+        # 3. 返回结果
+        # p, y, x, valid_mask, target 根本不需要改变！
+        # 我们只返回新的、时间上单调递增的 t_new。
+        
+        return p, y, x, t_new, valid_mask, target
+
+
+        
 class RandomReplaceByNoise(nn.Module):
     def __init__(self, H: int, W: int, p_replace: float):
         super().__init__()
@@ -706,6 +767,16 @@ def parse_transforms(transform_args: str):
             h = int(temp[0])
             w = int(temp[1])
             transforms.append(Resize(H=H, W=W, h=h, w=w))
+        elif item.startswith('Downsample-'):
+            # Downsample-{H,W}-{h,w}
+            item = item.split('-')
+            temp = item[1].split(',')
+            H = int(temp[0])
+            W = int(temp[1])
+            temp = item[2].split(',')
+            h = int(temp[0])
+            w = int(temp[1])
+            transforms.append(Downsample(H=H, W=W, h=h, w=w))
 
         elif item.startswith('RandomResize-'):
             # RandomResize-{scale_y[0],scale_y[1]}-{scale_x[0],scale_x[1]}
@@ -823,16 +894,16 @@ def parse_transforms(transform_args: str):
             transforms.append(RandomChunkDrop(n_chunk, max_mask_len))
 
         elif item.startswith('RandomChunkWrap-'):
-            # RandomChunkWrap-{n_chunk,max_mask_len}-{scale_low,scale_high}
+            # RandomChunkWrap-{n_chunk,max_mask_ratio}-{scale_low,scale_high}
             item = item.split('-')
             temp = item[1].split(',')
             n_chunk = int(temp[0])
-            max_mask_len = int(temp[1])
+            max_mask_ratio = float(temp[1])
 
             temp = item[2].split(',')
             scale_low = float(temp[0])
             scale_high = float(temp[1])
-            transforms.append(RandomChunkWrap(n_chunk, max_mask_len, scale_low, scale_high))
+            transforms.append(RandomChunkWrap(n_chunk, max_mask_ratio, scale_low, scale_high))
 
 
         elif item.startswith('RandomPolarityFlip-'):

@@ -76,6 +76,7 @@ class ForgettingAttention(nn.Module):
                 is_rms_norm=True,
             )
 
+    
     def forward(
             self,
             hidden_states: torch.Tensor,
@@ -93,8 +94,13 @@ class ForgettingAttention(nn.Module):
             )
 
         batch_size, q_len, _ = hidden_states.size()
+        
+            
 
         q, k, v = self.q_proj(hidden_states), self.k_proj(hidden_states), self.v_proj(hidden_states)
+
+
+
         f = F.logsigmoid(self.f_proj(hidden_states).float())
         if self.qk_norm:
             q, k = self.q_norm(q), self.k_norm(k)
@@ -135,7 +141,7 @@ class ForgettingAttention(nn.Module):
         o = self.o_proj(o)
         return o, None, past_key_values
 
-
+  
 def parallel_forgetting_attn_torch(
         q: torch.Tensor,
         k: torch.Tensor,
@@ -311,7 +317,8 @@ class BiForgettingAttention(nn.Module):
             window_size: Optional[int] = None,
             use_output_gate: bool = False,
             layer_idx: int = None,
-            backend='triton'
+            backend='triton',
+            bi_share_param:bool=True,
     ):
         super().__init__()
 
@@ -331,13 +338,24 @@ class BiForgettingAttention(nn.Module):
         self.use_output_gate = use_output_gate
         self.layer_idx = layer_idx
 
+        self.bi_share_param = bi_share_param
         self.q_proj = nn.Linear(self.hidden_size, self.hidden_size, bias=self.qkv_bias)
         self.k_proj = nn.Linear(self.hidden_size, self.kv_dim, bias=self.qkv_bias)
         self.v_proj = nn.Linear(self.hidden_size, self.kv_dim, bias=self.qkv_bias)
         self.f_proj = nn.Linear(self.hidden_size, self.num_heads, bias=True)
 
+        if not bi_share_param:
+            self.q_proj_b = nn.Linear(self.hidden_size, self.hidden_size, bias=self.qkv_bias)
+            self.k_proj_b = nn.Linear(self.hidden_size, self.kv_dim, bias=self.qkv_bias)
+            self.v_proj_b = nn.Linear(self.hidden_size, self.kv_dim, bias=self.qkv_bias)
+            self.f_proj_b = nn.Linear(self.hidden_size, self.num_heads, bias=True)
+
+
         if use_output_gate:
             self.g_proj = nn.Linear(self.hidden_size, self.hidden_size, bias=False)
+            if not bi_share_param:
+                self.g_proj_b = nn.Linear(self.hidden_size, self.hidden_size, bias=False)
+
         self.o_proj = nn.Linear(self.hidden_size * 2, self.hidden_size, bias=False)
 
         if qk_norm:
@@ -353,6 +371,19 @@ class BiForgettingAttention(nn.Module):
                     hidden_size=self.kv_dim,
                     is_rms_norm=True,
                 )
+
+                if not bi_share_param:
+                    self.q_norm_b = GroupNorm(
+                    num_groups=self.num_heads,
+                    hidden_size=self.hidden_size,
+                    is_rms_norm=True,
+                )
+                    self.k_norm_b = GroupNorm(
+                    num_groups=self.num_kv_heads,
+                    hidden_size=self.kv_dim,
+                    is_rms_norm=True,
+                )
+
             else:
                 self.q_norm = TorchGroupNorm(
                     num_groups=self.num_heads,
@@ -433,6 +464,7 @@ class BiForgettingAttention(nn.Module):
 
         return forward_attn, backward_attn
 
+    @torch.compiler.disable
     def forward(
             self,
             hidden_states: torch.Tensor,
@@ -449,14 +481,27 @@ class BiForgettingAttention(nn.Module):
                 "Arbitrary attention masks of shape [batch_size, seq_len, seq_len] are not allowed."
             )
 
-        batch_size, q_len, _ = hidden_states.size()
 
+        batch_size, q_len, _ = hidden_states.size()
+        
         q, k, v = self.q_proj(hidden_states), self.k_proj(hidden_states), self.v_proj(hidden_states)
+
+
+
+
         f = F.logsigmoid(self.f_proj(hidden_states).float())
         if self.qk_norm:
             q, k = self.q_norm(q), self.k_norm(k)
 
+        if not self.bi_share_param:
+            q_b, k_b, v_b = self.q_proj_b(hidden_states), self.k_proj_b(hidden_states), self.v_proj_b(hidden_states)
+            f_b = F.logsigmoid(self.f_proj_b(hidden_states).float())
+            if self.qk_norm:
+                q_b, k_b = self.q_norm_b(q_b), self.k_norm_b(k_b)
+
         cu_seqlens = kwargs.get('cu_seqlens', None)
+        assert past_key_values is None
+
         if past_key_values is not None:
             assert cu_seqlens is None, "cu_seqlens should not be provided when past_key_values is not None"
             state = past_key_values.update(
@@ -471,16 +516,34 @@ class BiForgettingAttention(nn.Module):
         k = rearrange(k, '... (h d) -> ... h d', d=self.head_dim)
         v = rearrange(v, '... (h d) -> ... h d', d=self.head_dim)
 
+        if not self.bi_share_param:
+            q_b = rearrange(q_b, '... (h d) -> ... h d', d=self.head_dim)
+            k_b = rearrange(k_b, '... (h d) -> ... h d', d=self.head_dim)
+            v_b = rearrange(v_b, '... (h d) -> ... h d', d=self.head_dim)
+
         assert attention_mask is not None
         if self.use_output_gate:
             g = self.g_proj(hidden_states).sigmoid()
+            if not self.bi_share_param:
+                g_b = self.g_proj_b(hidden_states).sigmoid()
         else:
             g = None
+            if not self.bi_share_param:
+                g_b = None
+
         outputs = []
+
+        if self.bi_share_param:
+            b_vars = (torch.flip(q, dims=[1]), torch.flip(k, dims=[1]), torch.flip(v, dims=[1]), torch.flip(f, dims=[1]),
+                 None if g is None else torch.flip(g, dims=[1]), torch.flip(attention_mask, dims=[1]))
+        else:
+            b_vars = (torch.flip(q_b, dims=[1]), torch.flip(k_b, dims=[1]), torch.flip(v_b, dims=[1]), torch.flip(f_b, dims=[1]),
+                 None if g_b is None else torch.flip(g_b, dims=[1]), torch.flip(attention_mask, dims=[1]))
+
+
         for q, k, v, f, g, attention_mask in (
                 (q, k, v, f, g, attention_mask),
-                (torch.flip(q, dims=[1]), torch.flip(k, dims=[1]), torch.flip(v, dims=[1]), torch.flip(f, dims=[1]),
-                 None if g is None else torch.flip(g, dims=[1]), torch.flip(attention_mask, dims=[1])),
+                b_vars,
         ):
             if attention_mask is not None:
                 q, (k, v, f), indices_q, cu_seqlens, max_seq_lens = unpad_input(q, (k, v, f), attention_mask, q_len,

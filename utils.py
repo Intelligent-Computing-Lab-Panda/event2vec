@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 import math
-
+import sys
 
 # torch.compile can not track lambda functions. We use nn.Module
 class Unsqueeze(nn.Module):
@@ -945,7 +945,202 @@ class AttentionPooling(nn.Module):
 
         return pooled_output
 
+# --- 你提供的打印函数 ---
+@torch.no_grad()
+def print_statistics(prefix, x):
+    if x is None:
+        print(f'{prefix}: None')
+        return
+    if not isinstance(x, torch.Tensor):
+        print(f'{prefix}: Not a Tensor ({type(x)})')
+        return
+    # 防止空 Tensor 报错
+    if x.numel() == 0:
+        print(f'{prefix}: Empty Tensor')
+        return
+        
+    # 打印统计信息
+    # 使用 try-catch 防止 x 全是 nan 导致 min/max 报错（虽然通常不会）
+    try:
+        print(f'{prefix}: [{x.min().item():.4g}, {x.max().item():.4g}], {x.mean().item():.4g} ± {x.std().item():.4g}')
+        if torch.isnan(x).any():
+            print(f"    >>> ⚠️  WARNING: Found {torch.isnan(x).sum().item()} NaNs in {prefix}!")
+        if torch.isinf(x).any():
+            print(f"    >>> ⚠️  WARNING: Found {torch.isinf(x).sum().item()} Infs in {prefix}!")
+    except Exception as e:
+        print(f'{prefix}: Error calculating stats ({e})')
 
+def check_nan_tensor(prefix, x):
+    n_nan = torch.isnan(x).long().sum()
+    if n_nan > 0:
+        print(f'{prefix} has {n_nan} NaNs in {x.shape}')
+    else:
+        print(print(f'{prefix} has no NaN in {x.shape}'))
+def register_nan_checks_with_debug(model):
+    """
+    注册 Hook：检测到 NaN 时打印该层的输入、输出、权重统计信息，并强制退出。
+    """
+    
+    # ================= Forward Hook =================
+    def get_forward_hook(layer_name):
+        def hook(module, input, output):
+            has_nan = False
+            
+            # 检查 Output 是否含有 NaN
+            if isinstance(output, torch.Tensor):
+                if torch.isnan(output).any(): has_nan = True
+            elif isinstance(output, (tuple, list)):
+                for o in output:
+                    if isinstance(o, torch.Tensor) and torch.isnan(o).any(): has_nan = True
+            
+            if has_nan:
+                print(f'\n{"!"*60}')
+                print(f'❌ [Forward] NaN detected at layer: 【{layer_name}】')
+                print(f'   Type: {module.__class__.__name__}')
+                print(f'{"!"*60}\n')
+                
+                # 1. 打印输入 (Inputs)
+                print("--- [Input Statistics] ---")
+                if isinstance(input, tuple):
+                    for i, x in enumerate(input):
+                        print_statistics(f'Input[{i}]', x)
+                else:
+                    print_statistics('Input', input)
+
+                # 2. 打印参数 (Parameters - Weights/Bias)
+                print("\n--- [Layer Parameter Statistics] ---")
+                param_count = 0
+                for name, param in module.named_parameters():
+                    print_statistics(f'Param ({name})', param)
+                    param_count += 1
+                if param_count == 0:
+                    print("No learnable parameters.")
+
+                # 3. 打印输出 (Outputs - 这就是 NaN 的源头)
+                print("\n--- [Output Statistics (NaN Source)] ---")
+                if isinstance(output, (tuple, list)):
+                    for i, x in enumerate(output):
+                        print_statistics(f'Output[{i}]', x)
+                else:
+                    print_statistics('Output', output)
+                
+                print("\n🛑 Exiting program immediately for debugging...")
+                sys.exit(1) # 强制退出
+
+        return hook
+
+    # ================= Backward Hook =================
+    def get_backward_hook(layer_name):
+        def hook(module, grad_input, grad_output):
+            # 检查是否有 NaN
+            has_nan = False
+            
+            # 辅助检查函数
+            def check_nan(t_list):
+                for t in t_list:
+                    if t is not None and isinstance(t, torch.Tensor) and torch.isnan(t).any():
+                        return True
+                return False
+
+            if check_nan(grad_output) or check_nan(grad_input):
+                print(f'\n{"!"*60}')
+                print(f'❌ [Backward] NaN detected at layer: 【{layer_name}】')
+                print(f'   Type: {module.__class__.__name__}')
+                print(f'{"!"*60}\n')
+
+                # 1. 打印传入的梯度 (Grad Output - From next layer)
+                print("--- [Grad Output (Incoming Gradients)] ---")
+                for i, g in enumerate(grad_output):
+                    print_statistics(f'Grad Output[{i}]', g)
+
+                # 2. 打印参数 (Parameters)
+                print("\n--- [Layer Parameter Statistics] ---")
+                for name, param in module.named_parameters():
+                    print_statistics(f'Param ({name})', param)
+                    # 如果参数本身已经有梯度了，也打印一下
+                    if param.grad is not None:
+                        print_statistics(f'Param ({name}).grad', param.grad)
+
+                # 3. 打印计算出的梯度 (Grad Input - Result)
+                print("\n--- [Grad Input (Calculated Gradients)] ---")
+                for i, g in enumerate(grad_input):
+                    print_statistics(f'Grad Input[{i}]', g)
+
+                print("\n🛑 Exiting program immediately for debugging...")
+                sys.exit(1)
+
+        return hook
+
+    # ================= 注册流程 =================
+    print("🔍 Registering detailed NaN hooks...")
+    for name, module in model.named_modules():
+        # 只对叶子节点注册，避免重复打印 (Sequential 容器不需要)
+        # len(list(module.children())) == 0 表示这是最后一层(如 Linear, Conv2d, ReLU)
+        if len(list(module.children())) == 0:
+            module.register_forward_hook(get_forward_hook(name))
+            module.register_full_backward_hook(get_backward_hook(name))
+    
+    print("✅ Hooks registered.")
+
+
+
+# 用于对比学习 计算损失
+class SupConLoss(nn.Module):
+    def __init__(self, temperature=0.07):
+        super(SupConLoss, self).__init__()
+        self.temperature = temperature
+
+    def forward(self, features, labels):
+        device = features.device
+        batch_size = features.shape[0]
+        
+        # 1. 计算 Logits (Cos Similarity / Temperature)
+        # features 必须已经做过 F.normalize(x, dim=1)
+        similarity_matrix = torch.matmul(features, features.T) / self.temperature
+        
+        # --- 核心修改：数值稳定性处理 (Max Trick) ---
+        # 每一行减去该行的最大值。
+        # detach() 很重要，不要让这个 max 参与梯度计算
+        logits_max, _ = torch.max(similarity_matrix, dim=1, keepdim=True)
+        logits = similarity_matrix - logits_max.detach()
+        # ----------------------------------------
+
+        # 2. 构建 Mask
+        # mask: 同类为 1，不同类为 0
+        mask = torch.eq(labels.unsqueeze(1), labels.unsqueeze(0)).float().to(device)
+        
+        # logits_mask: 对角线（自己和自己）设为 0
+        logits_mask = torch.scatter(
+            torch.ones_like(mask), 
+            1, 
+            torch.arange(batch_size).view(-1, 1).to(device), 
+            0
+        )
+        mask = mask * logits_mask
+
+        # 3. 计算 Log-Softmax
+        # 因为已经减去了 max，这里的 exp_logits 数值会在 [0, 1] 之间，非常安全
+        exp_logits = torch.exp(logits) * logits_mask
+        
+        # sum(1) 可能会有 0 (如果没有负样本)，导致 log(0)=-inf
+        # 加一个极小值 eps 避免 log(0)
+        log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True) + 1e-6)
+        
+        # 4. 计算 Mean Loss
+        # 只计算那些“由于 mask 存在正样本”的行
+        # 某些 label 可能在 batch 里只有一个样本（孤独样本），mask.sum(1) 会是 0
+        mask_pos_pairs = mask.sum(1)
+        # 避免除以 0：如果某行没有正对，mask_pos_pairs 为 0，这就需要处理
+        mask_pos_pairs = torch.where(mask_pos_pairs < 1e-6, torch.ones_like(mask_pos_pairs), mask_pos_pairs)
+        
+        mean_log_prob_pos = (mask * log_prob).sum(1) / mask_pos_pairs
+
+        # 只有当该行确实有正对时，才计入 Loss
+        # 这里简单起见，假设 batch 足够大，通常都有正对。
+        loss = - mean_log_prob_pos
+        loss = loss.mean()
+        
+        return loss
 
 if __name__ == '__main__':
     B = 4

@@ -74,7 +74,7 @@ model:
   p_intensity_drop: 0. 
   drop_path: 0.
   n_classes: 11
-  compile: false
+  compile_flag: false
   lr: 0.001
   min_lr: 0.0
   batch_size: 64
@@ -85,6 +85,17 @@ model:
   label_smoothing: 0.0
   load: null
   pool_every_layer: 1
+  bi_share_param: true
+  attention: fox
+  intensity_norm: none
+  remove_load_keys: none
+  train_head_only: false
+  contrastive_learning_temperature: 0.
+  self_supervised_style: bert
+  spatial_embed: plain
+  temporal_embed: plain
+  embed_fusion: plain
+  mask_len: 1
 data:
   name: dvs_gesture
   root: /dev/shm/DVS128Gesture/events_np

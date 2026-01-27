@@ -1,6 +1,7 @@
 import lightning
 import torch
 import numpy as np
+import copy
 from . import utils
 
 from .asl_dvs import ASLDVS
@@ -12,7 +13,7 @@ class EventDataModule(lightning.LightningDataModule):
                  num_workers: int,
                  train_repeats:int=1,
                  val_root:str=None, val_sample_number:int=None, val_sampler:str=None,
-                 val_repeats:int=8
+                 val_repeats:int=8, m_per_class_sample:int=0,
                  ):
         super().__init__()
         self.name = name
@@ -36,7 +37,7 @@ class EventDataModule(lightning.LightningDataModule):
         self.val_repeats = val_repeats
 
 
-
+        self.m_per_class_sample = m_per_class_sample
 
 
 
@@ -61,24 +62,38 @@ class EventDataModule(lightning.LightningDataModule):
         self.val_set = dts_class(training=False, root=self.val_root, sample_number=self.val_sample_number,
                                   sampler=self.val_sampler, repeats=self.val_repeats)
 
-
     def train_dataloader(self):
 
 
         collate_fn = utils.event_collate_fun_with_padding
-        return torch.utils.data.DataLoader(self.train_set, batch_size=self.batch_size, drop_last=True,
-                                           shuffle=True,
-                                           num_workers=self.num_workers,
-                                           pin_memory=True,
-                                           collate_fn=collate_fn,
-                                           worker_init_fn=utils.seed_worker,
-                                           persistent_workers=self.num_workers > 0,
-                                           prefetch_factor=4 if self.num_workers > 0 else None)
+        
+        if self.m_per_class_sample > 0:
+            labels = []
+            for item in self.train_set.samples:
+                labels.append(item[1])
+            return torch.utils.data.DataLoader(self.train_set, 
+            batch_sampler=utils.MPerClassSampler(labels=labels, m_per_class=self.m_per_class_sample, batch_size=self.batch_size),
+                                            
+                                            num_workers=self.num_workers,
+                                            pin_memory=False,
+                                            collate_fn=collate_fn,
+                                            worker_init_fn=utils.seed_worker,
+                                            persistent_workers=self.num_workers > 0,
+                                            prefetch_factor=4 if self.num_workers > 0 else None)
+        else:
+            return torch.utils.data.DataLoader(self.train_set, batch_size=self.batch_size, drop_last=True,
+                                            shuffle=True,
+                                            num_workers=self.num_workers,
+                                            pin_memory=False,
+                                            collate_fn=collate_fn,
+                                            worker_init_fn=utils.seed_worker,
+                                            persistent_workers=self.num_workers > 0,
+                                            prefetch_factor=4 if self.num_workers > 0 else None)
 
     def val_dataloader(self):
 
         collate_fn = utils.event_collate_fun_with_padding
-
+        
         return torch.utils.data.DataLoader(self.val_set, batch_size=self.batch_size, drop_last=False,
                                            num_workers=self.num_workers,
                                            pin_memory=True,
@@ -89,6 +104,16 @@ class EventDataModule(lightning.LightningDataModule):
 
 
 
+    def test_dataloader(self):
+        collate_fn = utils.event_collate_fun_with_padding
+
+        return torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, drop_last=False,
+                                           num_workers=self.num_workers,
+                                           pin_memory=True,
+                                           collate_fn=collate_fn,
+                                           worker_init_fn=utils.seed_worker,
+                                           persistent_workers=self.num_workers > 0,
+                                           prefetch_factor=4 if self.num_workers > 0 else None)
 
 if __name__ == '__main__':
 

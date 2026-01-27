@@ -68,8 +68,64 @@ import os, sys
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.fabric.utilities import measure_flops
 import torch.distributed as dist
-
+from pytorch_lightning.callbacks import Callback
 import event_dataset, models
+
+class DualOutput:
+    """
+    一个辅助类，用于将输出同时写入终端和文件。
+    """
+    def __init__(self, filename, stream):
+        self.terminal = stream
+        self.log = open(filename, 'a', encoding='utf-8')  # 使用追加模式 'a'
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.flush() # 确保实时写入文件
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+    def close(self):
+        self.log.close()
+
+class LogToFileCallback(Callback):
+    """
+    PyTorch Lightning 回调：在训练开始时重定向 stdout/stderr 到 log_dir 下的 txt 文件。
+    """
+    def __init__(self, filename="console_logs.txt"):
+        self.filename = filename
+        self.original_stdout = sys.stdout
+        self.original_stderr = sys.stderr
+
+    def setup(self, trainer, pl_module, stage=None):
+        # 确保 log_dir 存在
+        # 注意：trainer.log_dir 在 logger 初始化后才可用
+        log_dir = trainer.log_dir or trainer.default_root_dir
+        os.makedirs(log_dir, exist_ok=True)
+        
+        log_path = os.path.join(log_dir, self.filename)
+        
+        # 初始化双向输出
+        # 重定向 print() 等标准输出
+        sys.stdout = DualOutput(log_path, self.original_stdout)
+        # 重定向 报错/警告 等错误输出
+        sys.stderr = DualOutput(log_path, self.original_stderr)
+        
+        print(f"--> Logs are being saved to: {log_path}")
+
+    def teardown(self, trainer, pl_module, stage=None):
+        # 训练结束或中断时，恢复原始输出流，并关闭文件
+        if isinstance(sys.stdout, DualOutput):
+            sys.stdout.close()
+            sys.stdout = self.original_stdout
+        
+        if isinstance(sys.stderr, DualOutput):
+            sys.stderr.close()
+            sys.stderr = self.original_stderr
+
 
 
 class CustomLightningCLI(LightningCLI):
@@ -88,8 +144,8 @@ def main():
 
     if cli.config['test_only']:
 
-        cli.trainer.test(cli.model, datamodule=cli.datamodule, ckpt_path=cli.config['resume'])
-
+        cli.trainer.validate(cli.model, datamodule=cli.datamodule, ckpt_path=cli.config['resume'])
+        exit()
     cli.trainer.num_sanity_val_steps = 0
 
     ckp_path = os.path.join(cli.trainer.default_root_dir, "checkpoints",
@@ -101,7 +157,9 @@ def main():
 
     cli.trainer.callbacks = [save_ckp, SaveConfigCallback(cli._parser(cli.subcommand),
                                                           cli.config.get(str(cli.subcommand), cli.config),
-                                                          **cli.save_config_kwargs, )]  # note that it will remove the original default callbacks
+                                                          **cli.save_config_kwargs, ), 
+                                                          LogToFileCallback(filename="training_output.txt")
+                                                          ]  # note that it will remove the original default callbacks
 
     if cli.config['resume'] is not None:
         for cb in cli.trainer.callbacks:
@@ -115,15 +173,10 @@ def main():
     if cli.trainer.global_rank == 0:
         print(cli.model)
     cli.model.print_info = str(cli.config)
-    model = cli.model
-    if model.compile_flag:
-        t_start = time.time()
-        model = torch.compile(model, dynamic=False)
-        print(f'compile time: {time.time() - t_start:.3f}s')
 
-    cli.trainer.fit(model, datamodule=cli.datamodule, ckpt_path=cli.config['resume'])
+
+    cli.trainer.fit(cli.model, datamodule=cli.datamodule, ckpt_path=cli.config['resume'])
     
-
 if __name__ == '__main__':
     # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
     # os.environ['TORCH_USE_CUDA_DSA'] = '1'

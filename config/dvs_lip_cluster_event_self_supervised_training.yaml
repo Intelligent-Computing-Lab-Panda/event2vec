@@ -5,6 +5,9 @@ trainer:
   strategy: auto
   devices:
   - 0
+  - 1
+  - 2
+  - 3
   num_nodes: 1
   precision: bf16-mixed
   logger:
@@ -12,6 +15,7 @@ trainer:
     init_args:
       save_dir: ./dvslip
       name: lightning_logs
+      version: null
       log_graph: false
       default_hp_metric: true
       prefix: ''
@@ -61,20 +65,32 @@ model:
   W: 128
   h: 128
   w: 128
-  train_transform_args: RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16
-  train_transform_policy: RandomApply-0.5
-  test_transform_args: ''
+  attention: fox
   d_model: 192
   d_feedforward: 384
   nheads: 6
   n_layers: 16
-  activation: 'relu'
-  mask_ratio: 0.3
-  p_token_mix: 0.
-  p_intensity_drop: 0.
-  drop_path: 0
   n_classes: 100
-  compile: false
+  activation: relu
+  mask_ratio: 0.3
+  mask_len: 10
+  p_token_mix: 0.0
+  p_intensity_drop: 0.0
+  drop_path: 0.0
+  pool_every_layer: 0
+  bi_share_param: true
+  intensity_norm: log
+  train_head_only: false
+  remove_load_keys: none
+  contrastive_learning_temperature: 0.0
+  self_supervised_style: bert
+  spatial_embed: plain
+  temporal_embed: plain
+  embed_fusion: plain
+  train_transform_args: RandomResize-0.8,1.2-0.8,1.2/RandomRotation-128,128-15/RandomShear-0.05,0.05/RandomHorizontalFlip-128-0.5/RandomTranslate-16,16
+  train_transform_policy: RandomApply-0.5
+  test_transform_args: ''
+  compile_flag: false
   lr: 0.001
   min_lr: 1.0e-06
   batch_size: 64
@@ -84,10 +100,9 @@ model:
   wd: 0.05
   label_smoothing: 0.0
   load: null
-  pool_every_layer: 0
 data:
   name: dvs_lip
-  root: /dev/shm/dvs_lip/kmeans_1024
+  root: /dev/shm/dvs_lip/kmean_1024/
   sample_number: 1024
   sampler: none
   batch_size: 64
@@ -97,3 +112,8 @@ data:
   val_sample_number: null
   val_sampler: null
   val_repeats: 1
+  m_per_class_sample: 0
+test_only: false
+resume: null
+optimizer: null
+lr_scheduler: null
